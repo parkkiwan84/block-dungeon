@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>블록 던전 (프로토타입)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: #16161e;
+    color: #e8e8f0;
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    display: flex; justify-content: center;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none; /* iOS 길게 누르기 메뉴 방지 */
+    touch-action: manipulation;
+    overscroll-behavior: none; /* 당겨서 새로고침 방지 */
+  }
+  #app {
+    width: 100%; max-width: 480px;
+    display: flex; flex-direction: column;
+    padding: 12px; gap: 10px;
+  }
+  header { display: flex; gap: 10px; }
+  .panel {
+    flex: 1; background: #1f1f2b; border-radius: 10px; padding: 10px 12px;
+    transition: background 0.15s;
+  }
+  .panel.hit { background: #4a2030; }
+  .panel h2 { font-size: 13px; color: #9a9ab0; margin-bottom: 6px; font-weight: normal; }
+  .bar-wrap { background: #101018; border-radius: 6px; height: 14px; overflow: hidden; margin-bottom: 6px; }
+  .bar { height: 100%; border-radius: 6px; transition: width 0.25s; }
+  #player-hp-bar { background: #59cc66; }
+  #enemy-hp-bar { background: #e35d5d; }
+  .stats { font-size: 13px; color: #c8c8d8; line-height: 1.5; }
+  .warn { color: #ffb347; font-weight: bold; }
+  .danger { color: #ff5c5c; font-weight: bold; }
+  #board-wrap { position: relative; width: 100%; }
+  canvas {
+    display: block; width: 100%; height: auto;
+    background: #1c1c28; border-radius: 12px;
+    touch-action: none;
+  }
+  #log {
+    min-height: 44px; background: #1f1f2b; border-radius: 10px;
+    padding: 10px 14px; font-size: 14px; line-height: 1.5; color: #d8d8e8;
+  }
+  #overlay, #reward-overlay {
+    position: absolute; inset: 0; border-radius: 12px;
+    background: rgba(10, 10, 16, 0.88);
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px;
+  }
+  #overlay.hidden, #reward-overlay.hidden { display: none; }
+  #overlay h1, #reward-overlay h1 { font-size: 28px; }
+  #overlay p, #reward-overlay p { font-size: 15px; color: #b8b8c8; }
+  #overlay button {
+    font-size: 17px; padding: 10px 32px; border: none; border-radius: 8px;
+    background: #5b8def; color: white; cursor: pointer; font-family: inherit;
+  }
+  #overlay button:active { transform: scale(0.96); }
+  #reward-cards { display: flex; flex-direction: column; gap: 10px; width: 86%; }
+  .reward-card {
+    background: #262637; border: 1px solid #3a3a52; border-radius: 10px;
+    padding: 12px 16px; cursor: pointer; text-align: left;
+    color: #e8e8f0; font-family: inherit; font-size: 15px;
+  }
+  .reward-card:hover { background: #30304a; border-color: #5b8def; }
+  .reward-card:active { transform: scale(0.98); }
+  .reward-card small { color: #9a9ab0; font-size: 13px; display: block; margin-top: 3px; }
+
+  /* ── 전투 무대 ── */
+  #battle {
+    position: relative; height: 96px;
+    background: linear-gradient(#1a1a26, #20202e);
+    border-radius: 10px; overflow: hidden;
+  }
+  .fighter {
+    position: absolute; top: 50%; font-size: 46px; line-height: 1;
+    transform: translateY(-50%);
+  }
+  #pc { left: 52px; }
+  #ec { right: 52px; }
+  #ec.boss { font-size: 60px; filter: drop-shadow(0 0 8px #b05df0); }
+  @keyframes lungeR {
+    0%, 100% { transform: translateY(-50%) translateX(0); }
+    40% { transform: translateY(-50%) translateX(52px); }
+  }
+  @keyframes lungeL {
+    0%, 100% { transform: translateY(-50%) translateX(0); }
+    40% { transform: translateY(-50%) translateX(-52px); }
+  }
+  @keyframes hurtShake {
+    0%, 100% { transform: translateY(-50%) translateX(0); filter: none; }
+    25% { transform: translateY(-50%) translateX(-7px); filter: drop-shadow(0 0 7px #ff4040); }
+    50% { transform: translateY(-50%) translateX(7px); filter: drop-shadow(0 0 7px #ff4040); }
+    75% { transform: translateY(-50%) translateX(-4px); }
+  }
+  @keyframes buffBlue {
+    0%, 100% { transform: translateY(-50%) scale(1); filter: none; }
+    50% { transform: translateY(-50%) scale(1.2); filter: drop-shadow(0 0 12px #5b8def); }
+  }
+  @keyframes buffGreen {
+    0%, 100% { transform: translateY(-50%) scale(1); filter: none; }
+    50% { transform: translateY(-50%) scale(1.2); filter: drop-shadow(0 0 12px #5fc16d); }
+  }
+  @keyframes dieFall {
+    to { transform: translateY(-20%) rotate(80deg); opacity: 0; }
+  }
+  @keyframes spawnIn {
+    from { transform: translateY(-50%) translateX(56px); opacity: 0; }
+    to { transform: translateY(-50%) translateX(0); opacity: 1; }
+  }
+  .anim-lungeR { animation: lungeR 0.38s ease; }
+  .anim-lungeL { animation: lungeL 0.38s ease; }
+  .anim-hurt { animation: hurtShake 0.4s ease; }
+  .anim-buffB { animation: buffBlue 0.5s ease; }
+  .anim-buffG { animation: buffGreen 0.5s ease; }
+  .anim-die { animation: dieFall 0.55s ease forwards; }
+  .anim-spawn { animation: spawnIn 0.4s ease; }
+  @keyframes floatUp {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(-46px); opacity: 0; }
+  }
+  .float-text {
+    position: absolute; font-weight: bold; font-size: 19px;
+    animation: floatUp 0.9s ease-out forwards; pointer-events: none;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+
+  /* ── 보유 보상 바 + 보상 도감 ── */
+  #perk-bar {
+    background: #1f1f2b; border-radius: 8px; padding: 8px 12px;
+    font-size: 13px; color: #c8c8d8; cursor: pointer;
+  }
+  #perk-bar:hover { background: #262637; }
+  #perk-bar .hint { color: #6a6a80; }
+  #codex-overlay {
+    position: absolute; inset: 0; border-radius: 12px; z-index: 5;
+    background: rgba(10, 10, 16, 0.94);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 16px 0; overflow-y: auto;
+  }
+  #codex-overlay.hidden { display: none; }
+  #codex-overlay h1 { font-size: 20px; margin-bottom: 4px; }
+  .codex-row {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 88%; background: #232333; border-radius: 8px; padding: 8px 12px;
+    font-size: 14px; border: 1px solid transparent;
+  }
+  .codex-row.owned { border-color: #5b8def; background: #262a42; }
+  .codex-row small { color: #9a9ab0; font-size: 12px; display: block; }
+  .codex-row .cnt { color: #7fa8ff; font-size: 13px; white-space: nowrap; margin-left: 8px; }
+  #codex-close {
+    margin-top: 6px; font-size: 15px; padding: 8px 28px; border: none; border-radius: 8px;
+    background: #5b8def; color: white; cursor: pointer; font-family: inherit;
+  }
+  footer { font-size: 12px; color: #6a6a80; text-align: center; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="panel" id="player-panel">
+      <h2>플레이어</h2>
+      <div class="bar-wrap"><div class="bar" id="player-hp-bar"></div></div>
+      <div class="stats" id="player-stats"></div>
+    </div>
+    <div class="panel" id="enemy-panel">
+      <h2 id="enemy-name">적</h2>
+      <div class="bar-wrap"><div class="bar" id="enemy-hp-bar"></div></div>
+      <div class="stats" id="enemy-stats"></div>
+    </div>
+  </header>
+
+  <div id="battle">
+    <div class="fighter" id="pc">🦸</div>
+    <div class="fighter" id="ec">👾</div>
+  </div>
+
+  <div id="board-wrap">
+    <canvas id="board"></canvas>
+    <div id="overlay" class="hidden">
+      <h1>GAME OVER</h1>
+      <p id="overlay-detail"></p>
+      <button id="restart-btn">다시 시작</button>
+    </div>
+    <div id="reward-overlay" class="hidden">
+      <h1 id="reward-title">🎉 승리!</h1>
+      <p id="reward-sub">보상을 하나 선택하세요</p>
+      <div id="reward-cards"></div>
+    </div>
+    <div id="codex-overlay" class="hidden">
+      <h1>📜 보상 목록</h1>
+      <div id="codex-list" style="display:flex;flex-direction:column;gap:6px;width:100%;align-items:center;"></div>
+      <button id="codex-close">닫기</button>
+    </div>
+  </div>
+
+  <div id="perk-bar"></div>
+  <div id="log"></div>
+  <footer>같은 색 블록을 드래그로 2개 이상 연결 — ⚔ 공격 · 🛡 방어 · ♥ 회복<br>💀 저주는 옆에서 매칭해 정화 · 4개+ 연결 시 💣, 6개+ 연결 시 ⚡ 생성 (아무 연결에나 포함 가능, 단독 탭 격발)</footer>
+</div>
+
+<script>
+'use strict';
+
+// ── 상수 ─────────────────────────────────────────────
+const W = 6, H = 6, CELL = 74;
+const MIN_CHAIN = 2;
+const FALL_SPEED = 1100; // px/s
+
+const TYPE_CFG = [
+  { color: '#e35d5d', hi: '#f59a9a', icon: '⚔', name: '공격' },
+  { color: '#5b8def', hi: '#9dbcf7', icon: '🛡', name: '방어' },
+  { color: '#5fc16d', hi: '#a3e0ab', icon: '♥', name: '회복' },
+  { color: '#4a4a58', hi: '#66667a', icon: '💀', name: '저주' }, // 연결 불가, 인접 매칭으로만 정화
+  { color: '#e08a3d', hi: '#f0b678', icon: '💣', name: '폭탄' },  // 4+연결 보상, 3×3 폭발
+  { color: '#c9ab2e', hi: '#ecd870', icon: '⚡', name: '번개' },  // 6+연결 보상, 십자 제거
+];
+const SKULL = 3;
+const BOMB = 4;
+const LIGHTNING = 5;
+const isSpecial = t => t === BOMB || t === LIGHTNING;
+const SHIELD_CAP = 30;
+const MAX_SKULLS = 10;
+
+// ── 캔버스 ────────────────────────────────────────────
+const canvas = document.getElementById('board');
+const dpr = window.devicePixelRatio || 1;
+canvas.width = W * CELL * dpr;
+canvas.height = H * CELL * dpr;
+canvas.style.aspectRatio = `${W} / ${H}`;
+const ctx = canvas.getContext('2d');
+ctx.scale(dpr, dpr);
+
+// ── 전투 무대 (캐릭터 애니메이션) ──────────────────────
+const pcEl = document.getElementById('pc');
+const ecEl = document.getElementById('ec');
+const ENEMY_EMOJIS = ['👾', '👹', '🧟', '👺', '🦇', '👻', '🐺', '🧌', '🕷', '🦂'];
+const BOSS_EMOJI = '🐲';
+
+function playAnim(el, cls, dur = 420) {
+  el.classList.remove(cls);
+  void el.offsetWidth; // 리플로우로 애니메이션 재시작
+  el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), dur);
+}
+
+function floatText(text, color, side) {
+  const battle = document.getElementById('battle');
+  const s = document.createElement('span');
+  s.className = 'float-text';
+  s.textContent = text;
+  s.style.color = color;
+  s.style[side === 'left' ? 'left' : 'right'] = (36 + Math.random() * 44) + 'px';
+  s.style.top = (16 + Math.random() * 22) + 'px';
+  battle.appendChild(s);
+  setTimeout(() => s.remove(), 950);
+}
+
+// ── 게임 상태 ─────────────────────────────────────────
+let grid;          // grid[x][y], y=0이 바닥. 값: {type, sy} (sy = 화면 픽셀 y, 애니메이션용)
+let state;         // 'play' | 'falling' | 'over'
+let player, enemy, stage, turn;
+let chain = [];    // [{x, y}]
+let logMsg = '';
+
+const rand3 = () => Math.floor(Math.random() * 3);
+const screenX = x => x * CELL;
+const screenY = y => (H - 1 - y) * CELL;
+
+function newGame() {
+  grid = [];
+  for (let x = 0; x < W; x++) {
+    grid[x] = [];
+    for (let y = 0; y < H; y++) grid[x][y] = { type: rand3(), sy: screenY(y) };
+  }
+  ensureMoveExists();
+
+  player = {
+    maxHp: 100, hp: 100, atk: 5, shield: 0,
+    defGain: 3,      // 방어 블록 1개당 보호막
+    healGain: 2,     // 회복 블록 1개당 회복량 (밸런스: 3→2, 적 화력을 회복이 항상 이기는 문제)
+    startShield: 0,  // 스테이지 시작 시 보호막
+    lifesteal: 0,    // 공격 피해 대비 회복 비율
+    bonusTier: 0,    // 연결 길이 보너스 단계
+  };
+  stage = 1;
+  turn = 0;
+  spawnEnemy();
+  chain = [];
+  state = 'play';
+  setLog('같은 색 블록을 2개 이상 연결하세요!');
+  ownedRewards = {};
+  updatePerkBar();
+  document.getElementById('overlay').classList.add('hidden');
+  document.getElementById('reward-overlay').classList.add('hidden');
+  document.getElementById('codex-overlay').classList.add('hidden');
+  updateHud();
+}
+
+const isBossStage = s => s % 5 === 0; // 5, 10, 15… 스테이지는 보스전
+
+function spawnEnemy() {
+  const interval = stage >= 3 ? 2 : 3; // 스테이지 3부터 2턴마다 공격
+  const isBoss = isBossStage(stage);
+  let hp = 50 + (stage - 1) * 35;
+  let atk = 10 + (stage - 1) * 4;
+  if (isBoss) { hp = Math.round(hp * 1.8); atk = Math.round(atk * 1.4); }
+  enemy = { maxHp: hp, hp, atk, interval, countdown: interval, isBoss };
+  if (player.startShield > 0)
+    player.shield = Math.min(SHIELD_CAP, player.shield + player.startShield); // 수호의 각인
+
+  // 캐릭터 등장 연출
+  ecEl.classList.remove('anim-die');
+  ecEl.textContent = isBoss ? BOSS_EMOJI : ENEMY_EMOJIS[(stage - 1) % ENEMY_EMOJIS.length];
+  ecEl.classList.toggle('boss', isBoss);
+  playAnim(ecEl, 'anim-spawn', 420);
+}
+
+// ── 보상 풀 (개발가이드 4·5절: 스테이지 클리어 시 3택 1) ──
+const REWARDS = [
+  { icon: '⚔', name: '강철 칼날', desc: '공격력 +3', apply: p => p.atk += 3 },
+  { icon: '💪', name: '전투 광란', desc: '공격력 +6, 최대 체력 -10', apply: p => { p.atk += 6; p.maxHp = Math.max(30, p.maxHp - 10); p.hp = Math.min(p.hp, p.maxHp); } },
+  { icon: '❤', name: '생명의 샘', desc: '최대 체력 +20, 즉시 20 회복', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
+  { icon: '🛡', name: '강화 방패', desc: '방어 블록 효율 +2 (블록당 보호막)', apply: p => p.defGain += 2 },
+  { icon: '💊', name: '비상 물약', desc: '회복 블록 효율 +2 (블록당 회복량)', apply: p => p.healGain += 2 },
+  { icon: '✨', name: '수호의 각인', desc: '스테이지 시작 시 보호막 +10', apply: p => p.startShield += 10 },
+  { icon: '🔗', name: '연쇄의 달인', desc: '긴 연결 보너스 강화 (최대 2회 중첩)', apply: p => p.bonusTier = Math.min(2, p.bonusTier + 1) },
+  { icon: '🩸', name: '흡혈', desc: '공격 피해의 15%만큼 회복', apply: p => p.lifesteal += 0.15 },
+];
+
+let rewardChoices = [];
+let rewardPicksLeft = 1;
+let rewardPicksTotal = 1;
+let ownedRewards = {}; // 보상 인덱스 → 획득 횟수
+
+function updatePerkBar() {
+  const entries = Object.entries(ownedRewards);
+  const el = document.getElementById('perk-bar');
+  el.innerHTML = entries.length
+    ? `보유 보상: ${entries.map(([i, n]) => `${REWARDS[i].icon}${n > 1 ? '×' + n : ''}`).join('  ')} <span class="hint">— 눌러서 상세 보기</span>`
+    : `보유 보상 없음 <span class="hint">— 눌러서 전체 보상 목록 보기</span>`;
+}
+
+function renderCodex() {
+  document.getElementById('codex-list').innerHTML = REWARDS.map((r, i) => {
+    const n = ownedRewards[i] || 0;
+    return `<div class="codex-row${n ? ' owned' : ''}">
+      <div><b>${r.icon} ${r.name}</b><small>${r.desc}</small></div>
+      <div class="cnt">${n ? '보유 ×' + n : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('perk-bar').addEventListener('click', () => {
+  renderCodex();
+  document.getElementById('codex-overlay').classList.remove('hidden');
+});
+document.getElementById('codex-close').addEventListener('click', () => {
+  document.getElementById('codex-overlay').classList.add('hidden');
+});
+
+function showRewards() {
+  state = 'reward';
+  const isBossReward = rewardPicksTotal > 1;
+  document.getElementById('reward-title').textContent = isBossReward ? '👑 보스 격파!' : '🎉 승리!';
+  document.getElementById('reward-sub').textContent = isBossReward
+    ? `보상 ${rewardPicksTotal}개 — ${rewardPicksTotal - rewardPicksLeft + 1}번째 선택`
+    : '보상을 하나 선택하세요';
+  // 중복 없이 3개 추출
+  const pool = [...REWARDS.keys()];
+  rewardChoices = [];
+  for (let i = 0; i < 3; i++)
+    rewardChoices.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+
+  const wrap = document.getElementById('reward-cards');
+  wrap.innerHTML = '';
+  rewardChoices.forEach((ri, i) => {
+    const r = REWARDS[ri];
+    const btn = document.createElement('button');
+    btn.className = 'reward-card';
+    btn.innerHTML = `<b>${r.icon} ${r.name}</b><small>${r.desc}</small>`;
+    btn.addEventListener('click', () => pickReward(i));
+    wrap.appendChild(btn);
+  });
+  document.getElementById('reward-overlay').classList.remove('hidden');
+}
+
+function pickReward(i) {
+  if (state !== 'reward') return;
+  const idx = rewardChoices[i];
+  const r = REWARDS[idx];
+  r.apply(player);
+  ownedRewards[idx] = (ownedRewards[idx] || 0) + 1;
+  updatePerkBar();
+  rewardPicksLeft--;
+
+  if (rewardPicksLeft > 0) {
+    // 보스 보상: 새 카드 3장으로 한 번 더 선택
+    setLog(`${r.icon} [${r.name}] 획득! 보상을 하나 더 선택하세요`);
+    updateHud();
+    showRewards();
+    return;
+  }
+
+  document.getElementById('reward-overlay').classList.add('hidden');
+  stage++;
+  player.hp = Math.min(player.maxHp, player.hp + 5); // 기본 회복
+  spawnEnemy();
+  state = 'play';
+  setLog(`${r.icon} [${r.name}] 획득! ` +
+    (enemy.isBoss ? `👑 스테이지 ${stage} — 보스전!` : `스테이지 ${stage} 시작`));
+  updateHud();
+}
+
+// ── 막힘 방지: 연결 가능한 쌍이 없으면 전체 재배열 ──────
+function ensureMoveExists() {
+  let guard = 0;
+  while (!hasAnyMove() && guard++ < 50) {
+    for (let x = 0; x < W; x++)
+      for (let y = 0; y < H; y++)
+        if (grid[x][y]) grid[x][y].type = rand3();
+  }
+}
+
+function hasAnyMove() {
+  for (let x = 0; x < W; x++) {
+    for (let y = 0; y < H; y++) {
+      const b = grid[x][y];
+      if (!b) continue;
+      if (isSpecial(b.type)) return true; // 특수 블록은 단독 격발 가능 = 항상 수가 있음
+      if (b.type === SKULL) continue; // 저주 블록은 연결 불가
+      if (x + 1 < W && grid[x + 1][y] && grid[x + 1][y].type === b.type) return true;
+      if (y + 1 < H && grid[x][y + 1] && grid[x][y + 1].type === b.type) return true;
+    }
+  }
+  return false;
+}
+
+/// 적의 공격 시 기존 블록을 저주 블록으로 변환 (보드 잠식 압박)
+function spawnSkulls(count) {
+  const candidates = [];
+  let skullCount = 0;
+  for (let x = 0; x < W; x++) {
+    for (let y = 0; y < H; y++) {
+      if (!grid[x][y]) continue;
+      if (grid[x][y].type === SKULL) skullCount++;
+      else candidates.push({ x, y });
+    }
+  }
+  let converted = 0;
+  while (converted < count && skullCount + converted < MAX_SKULLS && candidates.length > 0) {
+    const idx = Math.floor(Math.random() * candidates.length);
+    const c = candidates.splice(idx, 1)[0];
+    grid[c.x][c.y].type = SKULL;
+    converted++;
+  }
+  return converted;
+}
+
+// ── 입력: 드래그 연결 (마우스+터치 공용 포인터 이벤트) ──
+function pointerToCell(e) {
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (W * CELL / rect.width);
+  const py = (e.clientY - rect.top) * (H * CELL / rect.height);
+  const cx = Math.floor(px / CELL);
+  const row = Math.floor(py / CELL);
+  const cy = H - 1 - row;
+  if (cx < 0 || cx >= W || cy < 0 || cy >= H) return null;
+  // 셀 중심 근처(반경 45%)에서만 인식 → 대각선 드래그 오인식 방지
+  const centerX = cx * CELL + CELL / 2, centerY = row * CELL + CELL / 2;
+  if (Math.hypot(px - centerX, py - centerY) > CELL * 0.45) return null;
+  return { x: cx, y: cy };
+}
+
+const inChain = (x, y) => chain.some(c => c.x === x && c.y === y);
+const isAdjacent = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
+
+canvas.addEventListener('contextmenu', e => e.preventDefault()); // 모바일 길게 누르기 메뉴 방지
+
+canvas.addEventListener('pointerdown', e => {
+  if (state !== 'play') return;
+  canvas.setPointerCapture(e.pointerId);
+  const c = pointerToCell(e);
+  if (c && grid[c.x][c.y] && grid[c.x][c.y].type !== SKULL) chain = [c];
+});
+
+canvas.addEventListener('pointermove', e => {
+  if (state !== 'play' || chain.length === 0) return;
+  const c = pointerToCell(e);
+  if (!c || !grid[c.x][c.y]) return;
+
+  // 백트래킹: 직전 블록으로 되돌아가면 마지막 해제
+  if (chain.length >= 2) {
+    const prev = chain[chain.length - 2];
+    if (c.x === prev.x && c.y === prev.y) { chain.pop(); return; }
+  }
+  if (inChain(c.x, c.y)) return;
+  const cand = grid[c.x][c.y];
+  if (cand.type === SKULL) return;
+  if (!isAdjacent(chain[chain.length - 1], c)) return;
+  // 와일드카드: 💣/⚡는 어느 색 연결에나 포함 가능
+  if (!isSpecial(cand.type)) {
+    let chainType = null;
+    for (const cc of chain) {
+      const t = grid[cc.x][cc.y].type;
+      if (t <= 2) { chainType = t; break; }
+    }
+    if (chainType !== null && cand.type !== chainType) return;
+  }
+  chain.push(c);
+});
+
+canvas.addEventListener('pointerup', () => {
+  if (state !== 'play') { chain = []; return; }
+  if (chain.length >= MIN_CHAIN) resolveChain();
+  else if (chain.length === 1 && isSpecial(grid[chain[0].x][chain[0].y].type)) resolveChain(); // 💣/⚡ 단독 격발
+  else chain = [];
+});
+
+// ── 턴 진행: 매칭 효과 → 낙하 → 적 행동 → 판정 ─────────
+// 연결 길이 보너스: [연쇄의 달인] 보상으로 단계 상승
+const BONUS_TIERS = [[1, 1.5, 2], [1, 1.8, 2.5], [1, 2.1, 3]];
+function lengthBonus(n) {
+  const t = BONUS_TIERS[player.bonusTier];
+  return n >= 6 ? t[2] : n >= 4 ? t[1] : t[0];
+}
+
+function resolveChain() {
+  state = 'falling';
+  turn++;
+
+  const dragLen = chain.length;
+  // 체인 타입: 첫 일반 블록 기준 (💣/⚡ 단독 격발이면 공격 취급)
+  let type = 0;
+  for (const c of chain) {
+    const t = grid[c.x][c.y].type;
+    if (t <= 2) { type = t; break; }
+  }
+
+  // 제거 집합 확장: 💣 = 3×3 폭발, ⚡ = 십자 제거 (특수 블록끼리 연쇄 반응)
+  const removal = new Map();
+  const expandQueue = [];
+  const addCell = (x, y) => {
+    if (x < 0 || x >= W || y < 0 || y >= H || !grid[x][y]) return;
+    const k = x + ',' + y;
+    if (removal.has(k)) return;
+    const cc = { x, y };
+    removal.set(k, cc);
+    expandQueue.push(cc);
+  };
+  for (const c of chain) addCell(c.x, c.y);
+  let bombCount = 0, lightningCount = 0;
+  while (expandQueue.length > 0) {
+    const c = expandQueue.pop();
+    const b = grid[c.x][c.y];
+    if (!b) continue;
+    if (b.type === BOMB) {
+      bombCount++;
+      for (let dx = -1; dx <= 1; dx++)
+        for (let dy = -1; dy <= 1; dy++) addCell(c.x + dx, c.y + dy);
+    } else if (b.type === LIGHTNING) {
+      lightningCount++;
+      for (let x = 0; x < W; x++) addCell(x, c.y);
+      for (let y = 0; y < H; y++) addCell(c.x, y);
+    }
+  }
+
+  // 제거 칸에 인접한 저주도 함께 정화
+  for (const c of [...removal.values()]) {
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = c.x + dx, ny = c.y + dy;
+      if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+      const nb = grid[nx][ny];
+      if (nb && nb.type === SKULL) addCell(nx, ny);
+    }
+  }
+
+  // 효과량 = 저주 제외 제거 블록 수, 길이 보너스 = 드래그 길이 기준
+  let skullPurged = 0, effectiveN = 0;
+  for (const c of removal.values()) {
+    if (grid[c.x][c.y].type === SKULL) skullPurged++;
+    else effectiveN++;
+  }
+  const n = effectiveN;
+  const bonus = lengthBonus(dragLen);
+
+  if (type === 0) {
+    const dmg = Math.round(player.atk * n * bonus);
+    enemy.hp = Math.max(0, enemy.hp - dmg);
+    let msg = `⚔ 공격 ×${n}! 적에게 ${dmg} 피해` + (bonus > 1 ? ` (연결 보너스 ×${bonus})` : '');
+    if (player.lifesteal > 0) {
+      const drain = Math.round(dmg * player.lifesteal);
+      player.hp = Math.min(player.maxHp, player.hp + drain);
+      msg += ` · 🩸 흡혈 +${drain}`;
+      setTimeout(() => floatText('+' + drain, '#7fe08a', 'left'), 300);
+    }
+    setLog(msg);
+    flashPanel('enemy-panel');
+    // 연출: 플레이어 돌진 → 적 피격
+    playAnim(pcEl, 'anim-lungeR', 400);
+    setTimeout(() => {
+      playAnim(ecEl, 'anim-hurt', 420);
+      floatText('-' + dmg, '#ffd24d', 'right');
+      updateHud();
+    }, 170);
+  } else if (type === 1) {
+    const gain = Math.round(player.defGain * n * bonus);
+    const before = player.shield;
+    player.shield = Math.min(SHIELD_CAP, player.shield + gain);
+    const actual = player.shield - before;
+    setLog(`🛡 방어 ×${n}! 보호막 +${actual}` + (actual < gain ? ` (상한 ${SHIELD_CAP})` : ''));
+    playAnim(pcEl, 'anim-buffB', 520);
+    floatText('+' + actual + '🛡', '#7fa8ff', 'left');
+  } else {
+    const heal = Math.round(player.healGain * n * bonus);
+    player.hp = Math.min(player.maxHp, player.hp + heal);
+    setLog(`♥ 회복 ×${n}! 체력 +${heal}`);
+    playAnim(pcEl, 'anim-buffG', 520);
+    floatText('+' + heal, '#7fe08a', 'left');
+  }
+
+  if (bombCount > 0) appendLog(`💣 폭발 ×${bombCount}`);
+  if (lightningCount > 0) appendLog(`⚡ 번개 ×${lightningCount}`);
+  if (skullPurged > 0) appendLog(`💀 저주 ${skullPurged}개 정화!`);
+
+  // 제거 후 열 단위 압축 + 위에서 새 블록 공급
+  for (const c of removal.values()) grid[c.x][c.y] = null;
+
+  // 4개 이상 드래그 연결 → 마지막 칸에 특수 블록 생성 (4~5개 💣, 6개+ ⚡)
+  if (dragLen >= 4) {
+    const last = chain[chain.length - 1];
+    const specialType = dragLen >= 6 ? LIGHTNING : BOMB;
+    grid[last.x][last.y] = { type: specialType, sy: screenY(last.y) };
+    appendLog(`${TYPE_CFG[specialType].icon} ${TYPE_CFG[specialType].name} 생성!`);
+  }
+  chain = [];
+
+  for (let x = 0; x < W; x++) {
+    let writeY = 0;
+    for (let y = 0; y < H; y++) {
+      if (!grid[x][y]) continue;
+      if (y !== writeY) { grid[x][writeY] = grid[x][y]; grid[x][y] = null; }
+      writeY++;
+    }
+    let offset = 0;
+    for (let y = writeY; y < H; y++) {
+      grid[x][y] = { type: rand3(), sy: -CELL * (1 + offset) };
+      offset++;
+    }
+  }
+
+  updateHud();
+}
+
+function afterFall() {
+  ensureMoveExists();
+
+  if (enemy.hp <= 0) {
+    // 쓰러지는 연출 (forwards 유지, spawnEnemy에서 해제)
+    ecEl.classList.remove('anim-die');
+    void ecEl.offsetWidth;
+    ecEl.classList.add('anim-die');
+    rewardPicksTotal = enemy.isBoss ? 2 : 1; // 보스는 보상 2장
+    rewardPicksLeft = rewardPicksTotal;
+    showRewards(); // pickReward에서 다음 스테이지 진행
+    updateHud();
+    return;
+  } else {
+    enemy.countdown--;
+    if (enemy.countdown <= 0) {
+      const absorbed = Math.min(player.shield, enemy.atk);
+      player.shield -= absorbed;
+      const taken = enemy.atk - absorbed;
+      player.hp -= taken;
+      enemy.countdown = enemy.interval;
+      appendLog(`💥 적의 공격! ${taken} 피해` + (absorbed > 0 ? ` (${absorbed} 막음)` : ''));
+      const cursed = spawnSkulls(1 + Math.floor((stage - 1) / 2) + (enemy.isBoss ? 1 : 0));
+      if (cursed > 0) appendLog(`💀 저주 ×${cursed}`);
+      flashPanel('player-panel');
+      // 연출: 적 돌진 → 플레이어 피격
+      playAnim(ecEl, 'anim-lungeL', 400);
+      setTimeout(() => {
+        playAnim(pcEl, 'anim-hurt', 420);
+        floatText('-' + taken, '#ff6b6b', 'left');
+        if (absorbed > 0) floatText('🛡-' + absorbed, '#7fa8ff', 'left');
+      }, 170);
+    }
+  }
+
+  if (player.hp <= 0) {
+    player.hp = 0;
+    state = 'over';
+    document.getElementById('overlay-detail').textContent =
+      `스테이지 ${stage}에서 쓰러졌다... (${turn}턴 생존)`;
+    document.getElementById('overlay').classList.remove('hidden');
+  } else {
+    state = 'play';
+  }
+  updateHud();
+}
+
+// ── HUD ──────────────────────────────────────────────
+function setLog(msg) { logMsg = msg; document.getElementById('log').textContent = msg; }
+function appendLog(msg) { setLog(logMsg + '  ·  ' + msg); }
+
+function flashPanel(id) {
+  const el = document.getElementById(id);
+  el.classList.add('hit');
+  setTimeout(() => el.classList.remove('hit'), 180);
+}
+
+function updateHud() {
+  document.getElementById('player-hp-bar').style.width = (player.hp / player.maxHp * 100) + '%';
+  document.getElementById('player-stats').innerHTML =
+    `HP ${player.hp}/${player.maxHp} · 🛡 ${player.shield}<br>⚔${player.atk} 🛡${player.defGain} ♥${player.healGain} · 스테이지 ${stage} · ${turn}턴`;
+
+  document.getElementById('enemy-name').textContent =
+    enemy.isBoss ? `👑 보스 (스테이지 ${stage})` : `적 (스테이지 ${stage})`;
+  const eBar = document.getElementById('enemy-hp-bar');
+  eBar.style.width = (enemy.hp / enemy.maxHp * 100) + '%';
+  eBar.style.background = enemy.isBoss ? '#b05df0' : '#e35d5d'; // 보스는 보라색 체력바
+  const warnCls = enemy.countdown === 1 ? 'danger' : 'warn';
+  document.getElementById('enemy-stats').innerHTML =
+    `HP ${enemy.hp}/${enemy.maxHp} · 공격력 ${enemy.atk}<br><span class="${warnCls}">공격까지 ${enemy.countdown}턴${enemy.countdown === 1 ? ' ⚠' : ''}</span>`;
+}
+
+// ── 렌더링 루프 ───────────────────────────────────────
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// 로직 틱: rAF와 분리해 setInterval로 구동 — 탭이 백그라운드여도 턴이 완료된다
+// (rAF는 hidden 탭에서 완전히 멈추므로 게임 진행 로직을 넣으면 안 됨)
+let lastLogic = performance.now();
+
+function logicTick() {
+  const now = performance.now();
+  const dt = Math.min(0.25, (now - lastLogic) / 1000);
+  lastLogic = now;
+
+  let settled = true;
+  for (let x = 0; x < W; x++) {
+    for (let y = 0; y < H; y++) {
+      const b = grid[x][y];
+      if (!b) continue;
+      const target = screenY(y);
+      if (b.sy < target) {
+        b.sy = Math.min(target, b.sy + FALL_SPEED * dt);
+        settled = false;
+      } else if (b.sy > target) {
+        b.sy = target;
+      }
+    }
+  }
+  if (state === 'falling' && settled) afterFall();
+}
+
+function frame() {
+  // 그리기 전용 (로직은 logicTick에서)
+  ctx.clearRect(0, 0, W * CELL, H * CELL);
+
+  for (let x = 0; x < W; x++) {
+    for (let y = 0; y < H; y++) {
+      const b = grid[x][y];
+      if (!b) continue;
+      const cfg = TYPE_CFG[b.type];
+      const selected = inChain(x, y);
+      const pad = selected ? 3 : 6;
+      const px = screenX(x);
+
+      ctx.fillStyle = selected ? cfg.hi : cfg.color;
+      roundRect(px + pad, b.sy + pad, CELL - pad * 2, CELL - pad * 2, 12);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = `${selected ? 30 : 26}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(cfg.icon, px + CELL / 2, b.sy + CELL / 2 + 1);
+    }
+  }
+
+  // 연결선
+  if (chain.length >= 2) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    chain.forEach((c, i) => {
+      const cx = screenX(c.x) + CELL / 2;
+      const cy = screenY(c.y) + CELL / 2;
+      if (i === 0) ctx.moveTo(cx, cy); else ctx.lineTo(cx, cy);
+    });
+    ctx.stroke();
+  }
+
+  requestAnimationFrame(frame);
+}
+
+document.getElementById('restart-btn').addEventListener('click', newGame);
+
+// 디버그용 노출 (콘솔에서 window.game 접근 가능)
+window.game = {
+  get grid() { return grid; },
+  get player() { return player; },
+  get enemy() { return enemy; },
+  get state() { return state; },
+  get stage() { return stage; },
+  set stage(v) { stage = v; },
+  get rewardChoices() { return rewardChoices; },
+  pickReward,
+  restart: newGame,
+};
+
+newGame();
+setInterval(logicTick, 33);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
