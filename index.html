@@ -206,7 +206,7 @@
 'use strict';
 
 // ── 상수 ─────────────────────────────────────────────
-const W = 6, H = 6, CELL = 74;
+const W = 8, H = 8, CELL = 74;
 const MIN_CHAIN = 2;
 const FALL_SPEED = 1100; // px/s
 
@@ -223,7 +223,7 @@ const BOMB = 4;
 const LIGHTNING = 5;
 const isSpecial = t => t === BOMB || t === LIGHTNING;
 const SHIELD_CAP = 30;
-const MAX_SKULLS = 10;
+const MAX_SKULLS = 16; // 8×8 보드 기준 (64칸의 25%)
 
 // ── 캔버스 ────────────────────────────────────────────
 const canvas = document.getElementById('board');
@@ -677,7 +677,7 @@ function afterFall() {
       player.hp -= taken;
       enemy.countdown = enemy.interval;
       appendLog(`💥 적의 공격! ${taken} 피해` + (absorbed > 0 ? ` (${absorbed} 막음)` : ''));
-      const cursed = spawnSkulls(1 + Math.floor((stage - 1) / 2) + (enemy.isBoss ? 1 : 0));
+      const cursed = spawnSkulls(2 + Math.floor((stage - 1) / 2) + (enemy.isBoss ? 1 : 0)); // 8×8 보드에 맞춰 기본 2개
       if (cursed > 0) appendLog(`💀 저주 ×${cursed}`);
       flashPanel('player-panel');
       // 연출: 적 돌진 → 플레이어 피격
