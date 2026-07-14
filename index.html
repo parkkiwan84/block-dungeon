@@ -24,19 +24,21 @@
     display: flex; flex-direction: column;
     padding: 12px; gap: 10px;
   }
-  header { display: flex; gap: 10px; }
-  .panel {
-    flex: 1; background: #fdf6e3; border-radius: 14px; padding: 10px 12px;
-    border: 3px solid #e2d3b4;
+  /* 전투 무대 안 HUD (플레이어/적 정보 오버레이) */
+  .bhud {
+    position: absolute; top: 6px; left: 8px; width: 45%; z-index: 2;
+    background: rgba(253, 246, 227, 0.92); border: 2px solid #e2d3b4;
+    border-radius: 10px; padding: 5px 8px;
     transition: background 0.15s;
   }
-  .panel.hit { background: #f7d4c4; }
-  .panel h2 { font-size: 13px; color: #a08c6a; margin-bottom: 6px; font-weight: bold; }
-  .bar-wrap { background: #e8dcc2; border-radius: 7px; height: 14px; overflow: hidden; margin-bottom: 6px; }
-  .bar { height: 100%; border-radius: 7px; transition: width 0.25s; }
+  .bhud.right { left: auto; right: 8px; text-align: right; }
+  .bhud.hit { background: #f7d4c4; }
+  .ename { font-size: 10.5px; color: #a08c6a; font-weight: bold; margin-bottom: 2px; line-height: 1.2; }
+  .bar-wrap { background: #e8dcc2; border-radius: 6px; height: 10px; overflow: hidden; margin-bottom: 3px; }
+  .bar { height: 100%; border-radius: 6px; transition: width 0.25s; }
   #player-hp-bar { background: #58c968; }
   #enemy-hp-bar { background: #ef6262; }
-  .stats { font-size: 13px; color: #5a4630; line-height: 1.5; }
+  .stats { font-size: 10.5px; color: #5a4630; line-height: 1.5; }
   .warn { color: #c77e10; font-weight: bold; }
   .danger { color: #e04343; font-weight: bold; }
   .gold { color: #c8940e; font-weight: bold; }
@@ -47,10 +49,16 @@
     border: 4px solid #e8dcc2;
     touch-action: none;
   }
+  /* 하단 통합 바 (퀵메뉴 + 로그) */
+  #bottom-bar {
+    background: #fdf6e3; border-radius: 12px; border: 3px solid #e2d3b4;
+    padding: 6px 8px; display: flex; flex-direction: column; gap: 5px;
+  }
+  #quick-row { display: flex; gap: 6px; align-items: center; }
   #log {
-    height: 48px; overflow: hidden; background: #fdf6e3; border-radius: 12px;
-    border: 3px solid #e2d3b4;
-    padding: 6px 12px; font-size: 13px; line-height: 1.4; color: #5a4630;
+    height: 37px; overflow: hidden; background: rgba(0, 0, 0, 0.045);
+    border-radius: 8px;
+    padding: 3px 9px; font-size: 12px; line-height: 1.35; color: #5a4630;
   }
   #overlay, #reward-overlay {
     position: absolute; inset: 0; border-radius: 12px;
@@ -100,18 +108,12 @@
   .t-brown  { background: #b3874f; border-color: #8a6a3a; }
   .t-gray   { background: #8a97a8; border-color: #66727f; }
 
-  /* ── 퀵메뉴 (가방 + 소지품 핫바) ── */
-  #quick-bar {
-    background: #fdf6e3; border-radius: 12px; padding: 7px 9px;
-    border: 3px solid #e2d3b4; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
-  }
-  #quick-bar:hover { background: #fffdf5; }
+  /* ── 퀵메뉴 (가방 + 소지품 핫바 — 하단 통합 바 윗줄) ── */
   #bag-btn {
-    width: 44px; height: 44px; border-radius: 12px; flex: none;
+    width: 40px; height: 40px; border-radius: 11px; flex: none;
     background: #b3874f; border: 2.5px solid #8a6a3a;
     box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
-    font-size: 22px; cursor: pointer; position: relative; font-family: inherit;
+    font-size: 20px; cursor: pointer; position: relative; font-family: inherit;
   }
   #bag-btn:active { transform: scale(0.94); }
   #bag-btn .n {
@@ -184,20 +186,20 @@
     50% { box-shadow: 0 0 0 8px rgba(125, 196, 240, 0); }
   }
 
-  /* ── 전투 무대 ── */
+  /* ── 전투 무대 (HP HUD 포함 통합형) ── */
   #battle {
-    position: relative; height: 104px;
-    background: linear-gradient(#b3e3f7 0%, #dbf3ff 56%, #8fce5a 56%, #7fbf4e 100%);
+    position: relative; height: 148px;
+    background: linear-gradient(#b3e3f7 0%, #dbf3ff 52%, #8fce5a 52%, #7fbf4e 100%);
     border-radius: 14px; overflow: hidden;
     border: 3px solid #e2d3b4;
   }
   .fighter {
-    position: absolute; top: 54%; width: 62px; line-height: 0;
+    position: absolute; top: 66%; width: 62px; line-height: 0;
     transform: translateY(-50%);
   }
   .fighter svg { width: 100%; height: auto; display: block; }
-  #pc { left: 44px; }
-  #ec { right: 44px; width: 58px; }
+  #pc { left: 38px; }
+  #ec { right: 38px; width: 58px; }
   #ec.boss { width: 92px; }
   #ec.elite { width: 72px; }
   @keyframes lungeR {
@@ -352,30 +354,28 @@
   /* ── 좁은 세로 화면 컴팩트 모드 ── */
   @media (max-height: 760px) {
     #app { padding: 8px; gap: 7px; }
-    #battle { height: 88px; }
+    #battle { height: 128px; }
     .fighter { width: 52px; }
     #ec { width: 50px; }
     #ec.elite { width: 62px; }
     #ec.boss { width: 78px; }
-    .skill-btn { width: 36px; height: 36px; font-size: 16px; }
-    .panel { padding: 6px 10px; border-width: 2px; }
-    .stats { font-size: 11.5px; }
-    .bar-wrap { height: 11px; margin-bottom: 4px; }
-    .panel h2 { font-size: 11.5px; margin-bottom: 4px; }
-    #log { height: 40px; font-size: 11.5px; padding: 5px 10px; }
-    #quick-bar { padding: 5px 7px; border-width: 2px; }
-    #bag-btn, #help-btn { width: 38px; height: 38px; font-size: 18px; }
-    .qb-item { width: 32px; height: 32px; font-size: 16px; }
-    .lg { font-size: 10px; gap: 3px; }
-    .lg .tile { width: 17px; height: 17px; font-size: 9px; }
+    .skill-btn { width: 34px; height: 34px; font-size: 15px; }
+    .bhud { padding: 4px 7px; }
+    .stats { font-size: 10px; }
+    .bar-wrap { height: 9px; }
+    #bottom-bar { padding: 5px 7px; border-width: 2px; gap: 4px; }
+    #log { height: 33px; font-size: 11px; }
+    #bag-btn, #help-btn, #sound-btn, #settings-btn { width: 36px; height: 36px; font-size: 16px; }
+    .qb-item { width: 30px; height: 30px; font-size: 15px; }
   }
-  #help-btn {
-    width: 44px; height: 44px; border-radius: 12px; flex: none;
-    background: #5aa8e8; border: 2.5px solid #3d7fbc;
+  #help-btn, #sound-btn, #settings-btn {
+    width: 40px; height: 40px; border-radius: 11px; flex: none;
     box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
-    font-size: 20px; cursor: pointer; font-family: inherit;
+    font-size: 18px; cursor: pointer; font-family: inherit; padding: 0;
   }
-  #help-btn:active { transform: scale(0.94); }
+  #help-btn { background: #5aa8e8; border: 2.5px solid #3d7fbc; }
+  #sound-btn, #settings-btn { background: #fdf6e3; border: 2.5px solid #d8c5a0; color: #5a4630; }
+  #help-btn:active, #sound-btn:active, #settings-btn:active { transform: scale(0.94); }
   .codex-row {
     display: flex; justify-content: space-between; align-items: center;
     width: 88%; background: #fdf6e3; border-radius: 12px; padding: 8px 12px;
@@ -397,13 +397,6 @@
     box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
     color: white; cursor: pointer; font-family: inherit; font-weight: bold;
   }
-  #sound-btn, #settings-btn {
-    position: absolute; top: 6px; right: 8px; z-index: 2;
-    background: rgba(253, 246, 227, 0.9); border: 2px solid #d8c5a0; border-radius: 10px;
-    color: #5a4630; font-size: 15px; padding: 4px 9px; cursor: pointer; font-family: inherit;
-  }
-  #settings-btn { right: 52px; }
-
   /* ── 인트로(타이틀) 화면 ── */
   #title-screen {
     position: fixed; inset: 0; z-index: 50;
@@ -539,42 +532,22 @@
     pointer-events: none;
     animation: fxFlash 0.55s ease-out forwards;
   }
-  footer {
-    display: flex; justify-content: center; align-items: center;
-    gap: 10px; flex-wrap: wrap; padding: 2px 0;
-  }
-  .lg {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11.5px; color: #4d5c35; font-weight: bold;
-  }
-  .lg .tile {
-    width: 21px; height: 21px; border-radius: 6px; border: 1.5px solid;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 11px; line-height: 1;
-    box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35);
-  }
 </style>
 </head>
 <body>
 <div id="app">
-  <header>
-    <div class="panel" id="player-panel">
-      <h2>플레이어</h2>
+  <div id="battle">
+    <div class="bhud" id="player-panel">
       <div class="bar-wrap"><div class="bar" id="player-hp-bar"></div></div>
       <div class="stats" id="player-stats"></div>
     </div>
-    <div class="panel" id="enemy-panel">
-      <h2 id="enemy-name">적</h2>
+    <div class="bhud right" id="enemy-panel">
+      <div class="ename" id="enemy-name">적</div>
       <div class="bar-wrap"><div class="bar" id="enemy-hp-bar"></div></div>
       <div class="stats" id="enemy-stats"></div>
     </div>
-  </header>
-
-  <div id="battle">
     <div class="fighter" id="pc"></div>
     <div class="fighter" id="ec"></div>
-    <button id="settings-btn">⚙️</button>
-    <button id="sound-btn">🔊</button>
     <div id="skill-bar"></div>
     <div id="mana-wrap"><div id="mana-bar"></div></div>
   </div>
@@ -641,20 +614,16 @@
     </div>
   </div>
 
-  <div id="quick-bar">
-    <button id="bag-btn">🎒<span class="n" id="bag-count" style="display:none"></span></button>
-    <div id="qb-items"></div>
-    <button id="help-btn">❓</button>
+  <div id="bottom-bar">
+    <div id="quick-row">
+      <button id="bag-btn">🎒<span class="n" id="bag-count" style="display:none"></span></button>
+      <div id="qb-items"></div>
+      <button id="help-btn">❓</button>
+      <button id="sound-btn">🔊</button>
+      <button id="settings-btn">⚙️</button>
+    </div>
+    <div id="log"></div>
   </div>
-  <div id="log"></div>
-  <footer>
-    <span class="lg"><span class="tile t-red">⚔️</span>공격</span>
-    <span class="lg"><span class="tile t-blue">🛡️</span>방어</span>
-    <span class="lg"><span class="tile t-green">♥️</span>회복</span>
-    <span class="lg"><span class="tile t-gray">💀</span>저주</span>
-    <span class="lg"><span class="tile t-orange">💣</span>4연결</span>
-    <span class="lg"><span class="tile t-gold">⚡</span>6연결</span>
-  </footer>
 </div>
 
 <div id="title-screen">
@@ -1897,7 +1866,7 @@ function updatePerkBar() { // 이름 유지 (모든 획득 경로에서 호출�
   badge.textContent = total;
   document.getElementById('qb-items').innerHTML = items.length
     ? items.map(it => `<span class="qb-item ${it.tint}">${it.icon}${it.n > 1 ? `<span class="n">×${it.n}</span>` : ''}</span>`).join('')
-    : '<span class="hint">획득한 유물·보상이 여기에 — 🎒을 눌러 전체 보기</span>';
+    : '<span class="hint">아이템이 여기에 표시돼요</span>';
 }
 
 // 인벤토리: 아이콘 그리드 → 탭하면 하단에 상세 설명
@@ -1929,11 +1898,13 @@ function renderCodex() {
   invDetail(null);
 }
 
-document.getElementById('quick-bar').addEventListener('click', () => {
+function openInventory() {
   SFX.ui();
   renderCodex();
   document.getElementById('codex-overlay').classList.remove('hidden');
-});
+}
+document.getElementById('bag-btn').addEventListener('click', openInventory);
+document.getElementById('qb-items').addEventListener('click', openInventory);
 document.getElementById('codex-close').addEventListener('click', () => {
   document.getElementById('codex-overlay').classList.add('hidden');
 });
@@ -2480,16 +2451,16 @@ function updateHud() {
   renderSkillBar();
   document.getElementById('player-hp-bar').style.width = (Math.max(0, player.hp) / player.maxHp * 100) + '%';
   document.getElementById('player-stats').innerHTML =
-    `HP ${Math.max(0, player.hp)}/${player.maxHp} · 🛡️ ${player.shield} · <span class="gold">💰${player.gold}</span> · 🔮${player.mana}<br>` +
-    `⚔️${player.atk} 🛡️${player.defGain} ♥️${player.healGain} · 지역 ${act} · ${depth}층 · ${turn}턴`;
+    `HP ${Math.max(0, player.hp)}/${player.maxHp} 🛡️${player.shield} <span class="gold">💰${player.gold}</span> 🔮${player.mana}<br>` +
+    `⚔️${player.atk} 🛡️${player.defGain} ♥️${player.healGain} · 📍${act}-${depth}층 ${turn}턴`;
 
   const nameEl = document.getElementById('enemy-name');
   const eBar = document.getElementById('enemy-hp-bar');
   const eStats = document.getElementById('enemy-stats');
   if (!enemy || state === 'map') {
-    nameEl.textContent = '탐색 중';
+    nameEl.textContent = '🗺 탐색 중';
     eBar.style.width = '0%';
-    eStats.innerHTML = '<span style="color:#6a6a80">지도에서 노드를 선택하세요</span>';
+    eStats.innerHTML = '<span style="color:#a08c6a">노드를 선택하세요</span>';
     return;
   }
   nameEl.textContent =
@@ -2499,7 +2470,7 @@ function updateHud() {
   eBar.style.background = enemy.kind === 'boss' ? '#9b6fd6' : enemy.kind === 'elite' ? '#f2953f' : '#ef6262';
   const warnCls = enemy.countdown === 1 ? 'danger' : 'warn';
   eStats.innerHTML =
-    `HP ${enemy.hp}/${enemy.maxHp} · 공격력 ${enemy.atk}${enemy.burn > 0 ? ' · 🔥' + enemy.burn : ''}<br>` +
+    `HP ${enemy.hp}/${enemy.maxHp} · ⚔️${enemy.atk}${enemy.burn > 0 ? ' · 🔥' + enemy.burn : ''}<br>` +
     `<span class="${warnCls}">공격까지 ${enemy.countdown}턴${enemy.countdown === 1 ? ' ⚠' : ''}</span>`;
 }
 
