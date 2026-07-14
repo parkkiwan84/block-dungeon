@@ -245,17 +245,17 @@
     text-shadow: 0 1px 3px rgba(0,0,0,0.6);
   }
 
-  /* ── 인벤토리 + 메타 성장 + 도움말 오버레이 ── */
-  #codex-overlay, #meta-overlay, #help-overlay {
+  /* ── 인벤토리 + 메타 성장 + 도움말 + 설정 오버레이 ── */
+  #codex-overlay, #meta-overlay, #help-overlay, #settings-overlay {
     position: absolute; inset: 0; border-radius: 12px;
     background: rgba(62, 48, 30, 0.92);
     display: flex; flex-direction: column; align-items: center; gap: 8px;
     padding: 16px 0; overflow-y: auto;
   }
   #codex-overlay, #help-overlay { z-index: 5; }
-  #meta-overlay { z-index: 6; }
-  #codex-overlay.hidden, #meta-overlay.hidden, #help-overlay.hidden { display: none; }
-  #codex-overlay h1, #meta-overlay h1, #help-overlay h1 { font-size: 20px; margin-bottom: 4px; color: #fff7e6; }
+  #meta-overlay, #settings-overlay { z-index: 6; }
+  #codex-overlay.hidden, #meta-overlay.hidden, #help-overlay.hidden, #settings-overlay.hidden { display: none; }
+  #codex-overlay h1, #meta-overlay h1, #help-overlay h1, #settings-overlay h1 { font-size: 20px; margin-bottom: 4px; color: #fff7e6; }
   #meta-overlay p { font-size: 14px; color: #eadfc6; }
   .help-row {
     display: flex; align-items: center; gap: 10px;
@@ -265,12 +265,13 @@
   .help-row .item-icon { width: 36px; height: 36px; font-size: 18px; border-width: 2px; border-radius: 10px; }
   .help-row b { display: block; font-size: 13.5px; }
   .help-row small { color: #a08c6a; font-size: 12px; line-height: 1.45; display: block; }
-  #help-close {
+  #help-close, #settings-close {
     margin-top: 6px; font-size: 15px; padding: 8px 28px; border: none; border-radius: 10px;
     background: #5aa8e8; border-bottom: 4px solid #3d7fbc;
     box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
     color: white; cursor: pointer; font-family: inherit; font-weight: bold;
   }
+  .buy.danger-btn { background: #e04343; border-bottom-color: #b03030; }
   #help-btn {
     width: 44px; height: 44px; border-radius: 12px; flex: none;
     background: #5aa8e8; border: 2.5px solid #3d7fbc;
@@ -299,11 +300,51 @@
     box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
     color: white; cursor: pointer; font-family: inherit; font-weight: bold;
   }
-  #sound-btn {
+  #sound-btn, #settings-btn {
     position: absolute; top: 6px; right: 8px; z-index: 2;
     background: rgba(253, 246, 227, 0.9); border: 2px solid #d8c5a0; border-radius: 10px;
     color: #5a4630; font-size: 15px; padding: 4px 9px; cursor: pointer; font-family: inherit;
   }
+  #settings-btn { right: 52px; }
+
+  /* ── 인트로(타이틀) 화면 ── */
+  #title-screen {
+    position: fixed; inset: 0; z-index: 50;
+    background: linear-gradient(#b3e3f7 0%, #dbf3ff 46%, #8fce5a 46%, #7fbf4e 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 20px;
+  }
+  #title-screen.hidden { display: none; }
+  .t-art { display: flex; align-items: flex-end; gap: 4px; }
+  .t-art > div { line-height: 0; }
+  .t-a1 { width: 112px; animation: bob 2.2s ease-in-out infinite; }
+  .t-a2 { width: 66px; animation: bob 2.2s ease-in-out 0.4s infinite; }
+  .t-a3 { width: 54px; animation: bob 2.2s ease-in-out 0.8s infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+  .t-logo {
+    font-size: 44px; font-weight: bold; color: #fff7e6; letter-spacing: 3px;
+    text-shadow: -2px 0 0 #8a6a3a, 2px 0 0 #8a6a3a, 0 -2px 0 #8a6a3a,
+      0 4px 0 #8a6a3a, 0 8px 14px rgba(60, 40, 0, 0.35);
+  }
+  .t-sub { font-size: 14px; color: #3d5527; font-weight: bold; }
+  .t-best {
+    font-size: 14px; color: #5a4630; font-weight: bold;
+    background: #fdf6e3; border: 3px solid #e2d3b4; border-radius: 12px; padding: 8px 18px;
+  }
+  #t-start {
+    font-size: 21px; padding: 14px 54px; border: none; border-radius: 16px;
+    background: #58c968; border-bottom: 5px solid #3f9c4d;
+    box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.35), 0 4px 10px rgba(60, 80, 20, 0.25);
+    color: #fff; font-weight: bold; font-family: inherit; cursor: pointer;
+  }
+  #t-start:active { transform: scale(0.96); }
+  .t-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .t-btn {
+    font-size: 14px; padding: 9px 16px; border-radius: 11px;
+    background: #fdf6e3; border: 2.5px solid #d8c5a0; border-bottom-width: 4px;
+    color: #5a4630; font-weight: bold; font-family: inherit; cursor: pointer;
+  }
+  .t-btn:active { transform: scale(0.95); }
 
   /* ── 획득 임팩트 연출 ── */
   .reward-card.picked {
@@ -381,6 +422,7 @@
   <div id="battle">
     <div class="fighter" id="pc"></div>
     <div class="fighter" id="ec"></div>
+    <button id="settings-btn">⚙️</button>
     <button id="sound-btn">🔊</button>
   </div>
 
@@ -389,9 +431,10 @@
     <div id="overlay" class="hidden">
       <h1>GAME OVER</h1>
       <p id="overlay-detail"></p>
-      <div style="display:flex;gap:10px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
         <button id="meta-btn" class="alt">💠 영혼의 각인</button>
         <button id="restart-btn">다시 시작</button>
+        <button id="home-btn" style="background:#b3874f;">🏠 타이틀</button>
       </div>
     </div>
     <div id="reward-overlay" class="hidden">
@@ -434,6 +477,12 @@
       <div class="help-row"><span class="item-icon t-sky">💠</span><span><b>죽어도 강해진다</b><small>쓰러지면 영혼 조각 획득 → [💠 영혼의 각인]에서 영구 강화</small></span></div>
       <button id="help-close">닫기</button>
     </div>
+    <div id="settings-overlay" class="hidden">
+      <h1>⚙️ 설정</h1>
+      <div id="settings-list" style="display:flex;flex-direction:column;gap:6px;width:100%;align-items:center;"></div>
+      <p style="font-size:12px;color:#a08c6a;">블록 던전 프로토타입 v1.0</p>
+      <button id="settings-close">닫기</button>
+    </div>
   </div>
 
   <div id="quick-bar">
@@ -450,6 +499,19 @@
     <span class="lg"><span class="tile t-orange">💣</span>4연결</span>
     <span class="lg"><span class="tile t-gold">⚡</span>6연결</span>
   </footer>
+</div>
+
+<div id="title-screen">
+  <div class="t-art" id="t-art"></div>
+  <div class="t-logo">블록 던전</div>
+  <div class="t-sub">블록을 이어 싸우는 로그라이크 퍼즐</div>
+  <div class="t-best" id="t-best"></div>
+  <button id="t-start">▶ 모험 시작</button>
+  <div class="t-row">
+    <button class="t-btn" id="t-meta">💠 영혼의 각인</button>
+    <button class="t-btn" id="t-help">❓ 도움말</button>
+    <button class="t-btn" id="t-settings">⚙️ 설정</button>
+  </div>
 </div>
 
 <script>
@@ -670,7 +732,9 @@ function celebrateFX(icon, name) {
 
 // ── 사운드 (Web Audio 합성 — 외부 파일 없음, 개발가이드 11절) ──
 const SOUND_KEY = 'bd_sound';
+const BGM_KEY = 'bd_bgm';
 let soundOn = (() => { try { return localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) { return true; } })();
+let bgmOn = (() => { try { return localStorage.getItem(BGM_KEY) !== '0'; } catch (e) { return true; } })();
 let actx = null, sfxGain = null, bgmGain = null;
 
 function audioInit() {
@@ -778,7 +842,7 @@ function setBgm(mode) {
 
 // 룩어헤드 스케줄러: 0.3초 앞까지 예약 (setInterval 지터 흡수)
 setInterval(() => {
-  if (!actx || !soundOn || !bgmMode || actx.state !== 'running') return;
+  if (!actx || !soundOn || !bgmOn || !bgmMode || actx.state !== 'running') return;
   const p = BGM_PATTERNS[bgmMode];
   const stepDur = 60 / p.bpm / 2;
   if (bgmNextT < actx.currentTime) bgmNextT = actx.currentTime + 0.05;
@@ -866,9 +930,9 @@ const META_UPS = [
 function loadMeta() {
   try {
     const m = JSON.parse(localStorage.getItem(META_KEY));
-    if (m && typeof m.shards === 'number') return { shards: m.shards, up: m.up || {} };
+    if (m && typeof m.shards === 'number') return { shards: m.shards, up: m.up || {}, best: m.best || 0 };
   } catch (e) { /* localStorage 불가 환경(시크릿 등)은 메타 성장 없이 진행 */ }
-  return { shards: 0, up: {} };
+  return { shards: 0, up: {}, best: 0 };
 }
 function saveMeta() {
   try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch (e) {}
@@ -912,6 +976,7 @@ document.getElementById('meta-btn').addEventListener('click', () => {
 });
 document.getElementById('meta-close').addEventListener('click', () => {
   document.getElementById('meta-overlay').classList.add('hidden');
+  returnToTitleIfNeeded();
 });
 
 // ── 게임 상태 ─────────────────────────────────────────
@@ -974,6 +1039,7 @@ function newGame() {
   document.getElementById('codex-overlay').classList.add('hidden');
   document.getElementById('meta-overlay').classList.add('hidden');
   document.getElementById('help-overlay').classList.add('hidden');
+  document.getElementById('settings-overlay').classList.add('hidden');
   setLog('🗺 지도에서 첫 노드를 선택하세요!' + (relics.size ? `  ·  🏺 ${[...relics].map(i => RELICS[i].icon).join('')} 보유 시작` : ''));
   showMap();
   updateHud();
@@ -1230,6 +1296,7 @@ function gameOver() {
   SFX.gameover();
   const earned = depth + bossKills * 3;
   meta.shards += earned;
+  if (depth > (meta.best || 0)) meta.best = depth; // 최고 기록 (타이틀에 표시)
   saveMeta();
   document.getElementById('overlay-detail').innerHTML =
     `지역 ${act} · ${depth}층에서 쓰러졌다... (${turn}턴 · 👑 보스 ${bossKills}회 격파)<br>` +
@@ -1578,7 +1645,118 @@ document.getElementById('help-btn').addEventListener('click', e => {
 });
 document.getElementById('help-close').addEventListener('click', () => {
   document.getElementById('help-overlay').classList.add('hidden');
+  returnToTitleIfNeeded();
 });
+
+// ── 설정 화면 ─────────────────────────────────────────
+let resetArmed = false;
+function renderSettings() {
+  const list = document.getElementById('settings-list');
+  list.innerHTML = '';
+  const mkRow = (icon, tint, name, desc, btnText, danger, fn) => {
+    const row = document.createElement('div');
+    row.className = 'codex-row';
+    row.innerHTML = `<span class="item-icon ${tint}" style="width:40px;height:40px;font-size:20px">${icon}</span>` +
+      `<div style="flex:1"><b>${name}</b><small>${desc}</small></div>`;
+    const btn = document.createElement('button');
+    btn.className = 'buy' + (danger ? ' danger-btn' : '');
+    btn.textContent = btnText;
+    btn.addEventListener('click', fn);
+    row.appendChild(btn);
+    list.appendChild(row);
+  };
+  mkRow('🔊', 't-blue', '전체 사운드', '효과음과 배경음악 전체', soundOn ? '켜짐' : '꺼짐', !soundOn, () => {
+    soundOn = !soundOn;
+    try { localStorage.setItem(SOUND_KEY, soundOn ? '1' : '0'); } catch (e) {}
+    renderSoundBtn();
+    if (soundOn) { audioInit(); if (actx && actx.state === 'suspended') actx.resume().catch(() => {}); SFX.ui(); }
+    renderSettings();
+  });
+  mkRow('🎵', 't-purple', '배경음악', '전투·지도 BGM만 따로 끄기', bgmOn ? '켜짐' : '꺼짐', !bgmOn, () => {
+    bgmOn = !bgmOn;
+    try { localStorage.setItem(BGM_KEY, bgmOn ? '1' : '0'); } catch (e) {}
+    SFX.ui();
+    renderSettings();
+  });
+  mkRow('🗑', 't-red', '데이터 초기화', '영혼 조각·각인·최고 기록 삭제 (되돌릴 수 없음)',
+    resetArmed ? '정말 삭제!' : '초기화', true, () => {
+      if (!resetArmed) {
+        resetArmed = true;
+        renderSettings();
+        setTimeout(() => { resetArmed = false; if (!document.getElementById('settings-overlay').classList.contains('hidden')) renderSettings(); }, 3000);
+        return;
+      }
+      resetArmed = false;
+      try { localStorage.removeItem(META_KEY); } catch (e) {}
+      meta = { shards: 0, up: {}, best: 0 };
+      SFX.cancel();
+      renderSettings();
+      renderTitle();
+    });
+}
+function openSettings() {
+  SFX.ui();
+  resetArmed = false;
+  renderSettings();
+  document.getElementById('settings-overlay').classList.remove('hidden');
+}
+document.getElementById('settings-btn').addEventListener('click', openSettings);
+document.getElementById('settings-close').addEventListener('click', () => {
+  document.getElementById('settings-overlay').classList.add('hidden');
+  returnToTitleIfNeeded();
+});
+
+// ── 인트로(타이틀) 화면 ───────────────────────────────
+let overlayFromTitle = false;
+function returnToTitleIfNeeded() {
+  if (!overlayFromTitle) return;
+  overlayFromTitle = false;
+  showTitle();
+}
+function renderTitle() {
+  document.getElementById('t-best').textContent =
+    `💠 영혼 조각 ${meta.shards}` +
+    (meta.best ? `  ·  🏆 최고 기록 ${meta.best}층 (지역 ${Math.ceil(meta.best / 5)})` : '  ·  🏆 첫 모험을 떠나보세요!');
+}
+function showTitle() {
+  renderTitle();
+  document.getElementById('title-screen').classList.remove('hidden');
+}
+function hideTitle() {
+  document.getElementById('title-screen').classList.add('hidden');
+}
+document.getElementById('t-start').addEventListener('click', () => {
+  SFX.fanfare();
+  hideTitle();
+  newGame();
+});
+document.getElementById('t-meta').addEventListener('click', () => {
+  SFX.ui();
+  overlayFromTitle = true;
+  hideTitle();
+  renderMeta();
+  document.getElementById('meta-overlay').classList.remove('hidden');
+});
+document.getElementById('t-help').addEventListener('click', () => {
+  SFX.ui();
+  overlayFromTitle = true;
+  hideTitle();
+  document.getElementById('help-overlay').classList.remove('hidden');
+});
+document.getElementById('t-settings').addEventListener('click', () => {
+  overlayFromTitle = true;
+  hideTitle();
+  openSettings();
+});
+document.getElementById('home-btn').addEventListener('click', () => {
+  SFX.ui();
+  showTitle();
+});
+// 타이틀 아트: 코드로 그린 슬라임 3마리
+document.getElementById('t-art').innerHTML =
+  `<div class="t-a2">${slimeSVG({ body: '#5aa8e8', hi: '#8ec6f2', dark: '#3d7fbc', frown: true })}</div>` +
+  `<div class="t-a1">${PLAYER_SVG}</div>` +
+  `<div class="t-a3">${slimeSVG({ body: '#9b6fd6', hi: '#bd9ce8', dark: '#7a4fb3', frown: true, horns: true })}</div>`;
 
 // ── 막힘 방지: 연결 가능한 쌍이 없으면 전체 재배열 ──────
 function ensureMoveExists() {
@@ -2113,7 +2291,8 @@ window.game = {
     spawnEnemy, showEvent, showShop, showRest, showRewards, showRelicChoice,
     addRelic, gainGold, applyRandomReward, spawnSkulls, afterFall, resolveChain,
     saveMeta, renderMeta, drawMapLines, SFX, setBgm, celebrateFX, heroSVG, updateHero,
-    getAudio: () => ({ actx, soundOn, bgmMode }),
+    showTitle, hideTitle, renderTitle, renderSettings, openSettings,
+    getAudio: () => ({ actx, soundOn, bgmMode, bgmOn }),
     RELICS, REWARDS, EVENTS, META_UPS, NODE_CFG,
     setDepth: v => { depth = v; }, setAct: v => { act = v; },
     setPendingCurse: v => { pendingCurse = v; },
@@ -2122,7 +2301,8 @@ window.game = {
   },
 };
 
-newGame();
+newGame();   // 배경 상태 준비 (타이틀 뒤에서 지도 대기)
+showTitle(); // 첫 화면은 인트로
 setInterval(logicTick, 33);
 requestAnimationFrame(frame);
 </script>
