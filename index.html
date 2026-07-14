@@ -71,13 +71,83 @@
   #reward-cards { display: flex; flex-direction: column; gap: 10px; width: 86%; }
   .reward-card {
     background: #fdf6e3; border: 3px solid #d8c5a0; border-radius: 14px;
-    padding: 12px 16px; cursor: pointer; text-align: left;
+    padding: 10px 14px; cursor: pointer; text-align: left;
     color: #5a4630; font-family: inherit; font-size: 15px;
+    display: flex; align-items: center; gap: 12px;
   }
   .reward-card:hover:not(:disabled) { background: #fffdf5; border-color: #5aa8e8; }
   .reward-card:active:not(:disabled) { transform: scale(0.98); }
   .reward-card:disabled { opacity: 0.45; cursor: default; }
+  .reward-card .rc-text { flex: 1; min-width: 0; }
   .reward-card small { color: #a08c6a; font-size: 13px; display: block; margin-top: 3px; }
+
+  /* ── 아이템 아이콘 타일 (게임식) ── */
+  .item-icon {
+    width: 46px; height: 46px; border-radius: 12px; flex: none;
+    border: 2.5px solid; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; line-height: 1;
+    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+  }
+  .t-red    { background: #ef6262; border-color: #c23e3e; }
+  .t-blue   { background: #5aa8e8; border-color: #3d7fbc; }
+  .t-green  { background: #5fc16d; border-color: #3f9c4d; }
+  .t-sky    { background: #7dc4f0; border-color: #4a95c9; }
+  .t-gold   { background: #f7c948; border-color: #d9a520; }
+  .t-purple { background: #9b6fd6; border-color: #7a4fb3; }
+  .t-orange { background: #f2953f; border-color: #cc7222; }
+  .t-pink   { background: #ec87b7; border-color: #c95f92; }
+  .t-brown  { background: #b3874f; border-color: #8a6a3a; }
+  .t-gray   { background: #8a97a8; border-color: #66727f; }
+
+  /* ── 퀵메뉴 (가방 + 소지품 핫바) ── */
+  #quick-bar {
+    background: #fdf6e3; border-radius: 12px; padding: 7px 9px;
+    border: 3px solid #e2d3b4; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #quick-bar:hover { background: #fffdf5; }
+  #bag-btn {
+    width: 44px; height: 44px; border-radius: 12px; flex: none;
+    background: #b3874f; border: 2.5px solid #8a6a3a;
+    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
+    font-size: 22px; cursor: pointer; position: relative; font-family: inherit;
+  }
+  #bag-btn:active { transform: scale(0.94); }
+  #bag-btn .n {
+    position: absolute; top: -7px; right: -7px;
+    background: #e04343; color: #fff; font-size: 11px; font-weight: bold;
+    border-radius: 9px; padding: 1px 6px; border: 2px solid #fdf6e3;
+  }
+  #qb-items { display: flex; gap: 6px; overflow: hidden; flex: 1; align-items: center; }
+  #qb-items .hint { color: #b09c78; font-size: 12px; }
+  .qb-item {
+    width: 38px; height: 38px; border-radius: 10px; flex: none;
+    border: 2px solid; display: flex; align-items: center; justify-content: center;
+    font-size: 19px; position: relative;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  }
+  .qb-item .n {
+    position: absolute; bottom: -4px; right: -4px;
+    background: #5a4630; color: #fff; font-size: 10px; font-weight: bold;
+    border-radius: 7px; padding: 0 4px;
+  }
+
+  /* ── 인벤토리 (아이콘 그리드 + 상세) ── */
+  .inv-sec { width: 88%; font-size: 13px; color: #eadfc6; margin-top: 4px; font-weight: bold; }
+  .inv-grid { width: 88%; display: flex; flex-wrap: wrap; gap: 8px; }
+  .inv-grid .item-icon { cursor: pointer; position: relative; }
+  .inv-grid .item-icon.dim { filter: grayscale(0.95); opacity: 0.35; }
+  .inv-grid .item-icon.sel { outline: 3px solid #f7c948; outline-offset: 1px; }
+  .inv-grid .item-icon .n {
+    position: absolute; bottom: -5px; right: -5px;
+    background: #5a4630; color: #fff; font-size: 10px; font-weight: bold;
+    border-radius: 7px; padding: 0 4px;
+  }
+  #inv-detail {
+    width: 88%; background: #fdf6e3; border: 3px solid #d8c5a0; border-radius: 12px;
+    padding: 10px 14px; font-size: 14px; color: #5a4630; min-height: 58px;
+  }
+  #inv-detail small { color: #a08c6a; font-size: 12.5px; display: block; margin-top: 3px; }
 
   /* ── 노드맵 ── */
   #map-overlay {
@@ -175,14 +245,7 @@
     text-shadow: 0 1px 3px rgba(0,0,0,0.6);
   }
 
-  /* ── 보유 보상 바 + 도감 + 메타 성장 ── */
-  #perk-bar {
-    background: #fdf6e3; border-radius: 12px; padding: 8px 12px;
-    border: 3px solid #e2d3b4;
-    font-size: 13px; color: #5a4630; cursor: pointer;
-  }
-  #perk-bar:hover { background: #fffdf5; }
-  #perk-bar .hint { color: #b09c78; }
+  /* ── 인벤토리 + 메타 성장 오버레이 ── */
   #codex-overlay, #meta-overlay {
     position: absolute; inset: 0; border-radius: 12px;
     background: rgba(62, 48, 30, 0.92);
@@ -194,7 +257,6 @@
   #codex-overlay.hidden, #meta-overlay.hidden { display: none; }
   #codex-overlay h1, #meta-overlay h1 { font-size: 20px; margin-bottom: 4px; color: #fff7e6; }
   #meta-overlay p { font-size: 14px; color: #eadfc6; }
-  .codex-sec { width: 88%; font-size: 13px; color: #eadfc6; margin-top: 6px; }
   .codex-row {
     display: flex; justify-content: space-between; align-items: center;
     width: 88%; background: #fdf6e3; border-radius: 12px; padding: 8px 12px;
@@ -309,8 +371,9 @@
       <div id="map-body"></div>
     </div>
     <div id="codex-overlay" class="hidden">
-      <h1>📜 소지품 목록</h1>
-      <div id="codex-list" style="display:flex;flex-direction:column;gap:6px;width:100%;align-items:center;"></div>
+      <h1>🎒 소지품</h1>
+      <div id="codex-list" style="display:flex;flex-direction:column;gap:8px;width:100%;align-items:center;"></div>
+      <div id="inv-detail"></div>
       <button id="codex-close">닫기</button>
     </div>
     <div id="meta-overlay" class="hidden">
@@ -321,7 +384,10 @@
     </div>
   </div>
 
-  <div id="perk-bar"></div>
+  <div id="quick-bar">
+    <button id="bag-btn">🎒<span class="n" id="bag-count" style="display:none"></span></button>
+    <div id="qb-items"></div>
+  </div>
   <div id="log"></div>
   <footer>같은 색 블록을 드래그로 2개 이상 연결 — ⚔️ 공격 · 🛡️ 방어 · ♥️ 회복 · 💀 저주는 옆에서 매칭해 정화<br>4개+ 연결 시 💣, 6개+ 연결 시 ⚡ 생성 · 전투 후 지도에서 다음 노드 선택 — 정예·보스에게서 🏺 유물 획득</footer>
 </div>
@@ -683,17 +749,17 @@ renderSoundBtn();
 
 // ── 유물 (규칙 변경 패시브 — 개발가이드 5절) ──────────
 const RELICS = [
-  { icon: '🔥', name: '불꽃의 심장', desc: '공격 연결 5개 이상 시 적에게 화상 (2턴간 턴당 6 피해)' },
-  { icon: '🧲', name: '자석 결정', desc: '특수 블록 생성 조건 완화 — 3개+ 연결 시 💣, 5개+ 연결 시 ⚡' },
-  { icon: '🍀', name: '네잎클로버', desc: '전투 보상 선택지가 4장으로 증가' },
-  { icon: '💎', name: '황금 두꺼비', desc: '골드 획득 +50%' },
-  { icon: '🕯️', name: '정화의 촛불', desc: '적이 만드는 저주 블록 -1개' },
-  { icon: '🌵', name: '가시 갑옷', desc: '적에게 공격당하면 적 공격력의 40%를 반사' },
-  { icon: '🌿', name: '재생의 부적', desc: '내 행동마다 체력 +2' },
-  { icon: '🗡️', name: '사신의 낫', desc: '적 체력이 30% 이하면 공격 피해 ×1.5' },
-  { icon: '🛡️', name: '수호 문장', desc: '보호막 상한 30 → 50' },
-  { icon: '⏳', name: '시간의 모래', desc: '새 적의 첫 공격까지 1턴 추가' },
-  { icon: '🎲', name: '행운 주사위', desc: '전투 시작 시 보드에 💣 1개 배치' },
+  { icon: '🔥', tint: 't-red', name: '불꽃의 심장', desc: '공격 연결 5개 이상 시 적에게 화상 (2턴간 턴당 6 피해)' },
+  { icon: '🧲', tint: 't-gray', name: '자석 결정', desc: '특수 블록 생성 조건 완화 — 3개+ 연결 시 💣, 5개+ 연결 시 ⚡' },
+  { icon: '🍀', tint: 't-green', name: '네잎클로버', desc: '전투 보상 선택지가 4장으로 증가' },
+  { icon: '💎', tint: 't-gold', name: '황금 두꺼비', desc: '골드 획득 +50%' },
+  { icon: '🕯️', tint: 't-orange', name: '정화의 촛불', desc: '적이 만드는 저주 블록 -1개' },
+  { icon: '🌵', tint: 't-brown', name: '가시 갑옷', desc: '적에게 공격당하면 적 공격력의 40%를 반사' },
+  { icon: '🌿', tint: 't-green', name: '재생의 부적', desc: '내 행동마다 체력 +2' },
+  { icon: '🗡️', tint: 't-purple', name: '사신의 낫', desc: '적 체력이 30% 이하면 공격 피해 ×1.5' },
+  { icon: '🛡️', tint: 't-blue', name: '수호 문장', desc: '보호막 상한 30 → 50' },
+  { icon: '⏳', tint: 't-sky', name: '시간의 모래', desc: '새 적의 첫 공격까지 1턴 추가' },
+  { icon: '🎲', tint: 't-pink', name: '행운 주사위', desc: '전투 시작 시 보드에 💣 1개 배치' },
 ];
 const R_FIRE = 0, R_MAGNET = 1, R_CLOVER = 2, R_TOAD = 3, R_CANDLE = 4,
       R_THORNS = 5, R_REGEN = 6, R_SCYTHE = 7, R_WARD = 8, R_SAND = 9, R_DICE = 10;
@@ -756,9 +822,11 @@ function renderMeta() {
   META_UPS.forEach(u => {
     const lv = meta.up[u.key] || 0;
     const dots = '●'.repeat(lv) + '○'.repeat(u.max - lv);
+    const tints = { atk: 't-red', hp: 't-pink', shield: 't-blue', gold: 't-gold', relic: 't-purple' };
     const row = document.createElement('div');
     row.className = 'codex-row' + (lv > 0 ? ' owned' : '');
-    row.innerHTML = `<div><b>${u.icon} ${u.name}</b> <span style="color:#7fa8ff;font-size:12px">${dots}</span><small>${u.desc}${lv > 0 ? ` (현재 Lv${lv})` : ''}</small></div>`;
+    row.innerHTML = `<span class="item-icon ${tints[u.key]}" style="width:40px;height:40px;font-size:20px">${u.icon}</span>` +
+      `<div style="flex:1"><b>${u.name}</b> <span style="color:#3d7fbc;font-size:12px">${dots}</span><small>${u.desc}${lv > 0 ? ` (현재 Lv${lv})` : ''}</small></div>`;
     const btn = document.createElement('button');
     btn.className = 'buy';
     if (lv >= u.max) { btn.textContent = 'MAX'; btn.disabled = true; }
@@ -1118,7 +1186,10 @@ function showChoiceOverlay(title, sub, cards) {
   cards.forEach(c => {
     const btn = document.createElement('button');
     btn.className = 'reward-card';
-    btn.innerHTML = c.html;
+    // 아이콘 타일 + 텍스트 (구조형) 또는 직접 html
+    btn.innerHTML = c.html || (
+      (c.icon ? `<span class="item-icon ${c.tint || 't-orange'}">${c.icon}</span>` : '') +
+      `<span class="rc-text"><b>${c.name}</b>${c.desc ? `<small>${c.desc}</small>` : ''}</span>`);
     if (c.disabled) btn.disabled = true;
     else btn.addEventListener('click', () => { SFX.ui(); c.onPick(btn); });
     wrap.appendChild(btn);
@@ -1131,14 +1202,14 @@ function hideChoiceOverlay() {
 
 // ── 보상 풀 (스테이지 클리어 시 3택 1, 네잎클로버 보유 시 4택 1) ──
 const REWARDS = [
-  { icon: '⚔️', name: '강철 칼날', desc: '공격력 +3', apply: p => p.atk += 3 },
-  { icon: '💪', name: '전투 광란', desc: '공격력 +6, 최대 체력 -10', apply: p => { p.atk += 6; p.maxHp = Math.max(30, p.maxHp - 10); p.hp = Math.min(p.hp, p.maxHp); } },
-  { icon: '❤️', name: '생명의 샘', desc: '최대 체력 +20, 즉시 20 회복', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
-  { icon: '🛡️', name: '강화 방패', desc: '방어 블록 효율 +2 (블록당 보호막)', apply: p => p.defGain += 2 },
-  { icon: '💊', name: '비상 물약', desc: '회복 블록 효율 +2 (블록당 회복량)', apply: p => p.healGain += 2 },
-  { icon: '✨', name: '수호의 각인', desc: '전투 시작 시 보호막 +10', apply: p => p.startShield += 10 },
-  { icon: '🔗', name: '연쇄의 달인', desc: '긴 연결 보너스 강화 (최대 2회 중첩)', apply: p => p.bonusTier = Math.min(2, p.bonusTier + 1) },
-  { icon: '🩸', name: '흡혈', desc: '공격 피해의 15%만큼 회복', apply: p => p.lifesteal += 0.15 },
+  { icon: '⚔️', tint: 't-red', name: '강철 칼날', desc: '공격력 +3', apply: p => p.atk += 3 },
+  { icon: '💪', tint: 't-orange', name: '전투 광란', desc: '공격력 +6, 최대 체력 -10', apply: p => { p.atk += 6; p.maxHp = Math.max(30, p.maxHp - 10); p.hp = Math.min(p.hp, p.maxHp); } },
+  { icon: '❤️', tint: 't-pink', name: '생명의 샘', desc: '최대 체력 +20, 즉시 20 회복', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
+  { icon: '🛡️', tint: 't-blue', name: '강화 방패', desc: '방어 블록 효율 +2 (블록당 보호막)', apply: p => p.defGain += 2 },
+  { icon: '💊', tint: 't-green', name: '비상 물약', desc: '회복 블록 효율 +2 (블록당 회복량)', apply: p => p.healGain += 2 },
+  { icon: '✨', tint: 't-sky', name: '수호의 각인', desc: '전투 시작 시 보호막 +10', apply: p => p.startShield += 10 },
+  { icon: '🔗', tint: 't-gold', name: '연쇄의 달인', desc: '긴 연결 보너스 강화 (최대 2회 중첩)', apply: p => p.bonusTier = Math.min(2, p.bonusTier + 1) },
+  { icon: '🩸', tint: 't-red', name: '흡혈', desc: '공격 피해의 15%만큼 회복', apply: p => p.lifesteal += 0.15 },
 ];
 
 let rewardChoices = [];
@@ -1173,7 +1244,7 @@ function showRewards() {
       : '보상을 하나 선택하세요',
     rewardChoices.map(ri => {
       const r = REWARDS[ri];
-      return { html: `<b>${r.icon} ${r.name}</b><small>${r.desc}</small>`, onPick: btn => pickWithFx(btn, () => pickReward(ri)) };
+      return { icon: r.icon, tint: r.tint, name: r.name, desc: r.desc, onPick: btn => pickWithFx(btn, () => pickReward(ri)) };
     })
   );
 }
@@ -1230,7 +1301,7 @@ function showRelicChoice() {
     picks.map(ri => {
       const r = RELICS[ri];
       return {
-        html: `<b>${r.icon} ${r.name}</b><small>${r.desc}</small>`,
+        icon: r.icon, tint: r.tint, name: r.name, desc: r.desc,
         onPick: btn => pickWithFx(btn, () => {
           if (state !== 'relic') return;
           hideChoiceOverlay();
@@ -1248,37 +1319,37 @@ const EVENTS = [
     icon: '🗿', name: '수상한 석상',
     desc: '낡은 석상이 희미하게 빛나고 있다. 손을 대면 무슨 일이 일어날 것 같다.',
     choices: [
-      { label: '🤚 만져본다', sub: '50% 유물 획득 / 50% 체력 -15',
+      { icon: '🤚', tint: 't-orange', label: '만져본다', sub: '50% 유물 획득 / 50% 체력 -15',
         act() {
           if (Math.random() < 0.5) giveRandomRelic('🗿 석상의 축복!');
           else { player.hp = Math.max(1, player.hp - 15); setLog('🗿 석상의 저주! 체력 -15'); }
         } },
-      { label: '🚶 지나친다', sub: '아무 일도 일어나지 않는다', act() { setLog('조용히 석상을 지나쳤다.'); } },
+      { icon: '🚶', tint: 't-gray', label: '지나친다', sub: '아무 일도 일어나지 않는다', act() { setLog('조용히 석상을 지나쳤다.'); } },
     ],
   },
   {
     icon: '📦', name: '버려진 금고',
     desc: '누군가 두고 간 금고다. 자물쇠가 허술해 보인다.',
     choices: [
-      { label: '🔓 연다', sub: '60% 골드 / 40% 다음 전투에 저주 3개',
+      { icon: '🔓', tint: 't-gold', label: '연다', sub: '60% 골드 / 40% 다음 전투에 저주 3개',
         act() {
           if (Math.random() < 0.6) { const g = gainGold(40 + depth * 3); setLog(`📦 금고 안에서 💰 ${g} 발견!`); }
           else { pendingCurse = 3; setLog('📦 함정이었다! 다음 전투가 💀 저주 3개와 함께 시작된다'); }
         } },
-      { label: '🚶 무시한다', act() { setLog('금고를 지나쳤다.'); } },
+      { icon: '🚶', tint: 't-gray', label: '무시한다', act() { setLog('금고를 지나쳤다.'); } },
     ],
   },
   {
     icon: '⛲', name: '치유의 샘',
     desc: '맑은 물이 샘솟는다. 몸이 가벼워지는 기분이다.',
     choices: [
-      { label: '💧 물을 마신다', sub: '체력 40% 회복',
+      { icon: '💧', tint: 't-sky', label: '물을 마신다', sub: '체력 40% 회복',
         act() {
           const h = Math.round(player.maxHp * 0.4);
           player.hp = Math.min(player.maxHp, player.hp + h);
           setLog(`⛲ 체력 +${h} 회복!`);
         } },
-      { label: '🛁 몸을 담근다', sub: '최대 체력 +8',
+      { icon: '🛁', tint: 't-pink', label: '몸을 담근다', sub: '최대 체력 +8',
         act() { player.maxHp += 8; player.hp += 8; setLog('⛲ 최대 체력 +8!'); } },
     ],
   },
@@ -1286,22 +1357,22 @@ const EVENTS = [
     icon: '🔮', name: '어둠의 제단',
     desc: '불길한 기운의 제단이다. 생명력을 바치면 힘을 얻을 수 있을 것 같다.',
     choices: [
-      { label: '🩸 생명을 바친다', sub: '최대 체력 -10, 유물 획득',
+      { icon: '🩸', tint: 't-purple', label: '생명을 바친다', sub: '최대 체력 -10, 유물 획득',
         act() {
           player.maxHp = Math.max(30, player.maxHp - 10);
           player.hp = Math.min(player.hp, player.maxHp);
           giveRandomRelic('🔮 제단의 힘!');
         } },
-      { label: '🚶 거절한다', act() { setLog('제단에서 물러났다.'); } },
+      { icon: '🚶', tint: 't-gray', label: '거절한다', act() { setLog('제단에서 물러났다.'); } },
     ],
   },
   {
     icon: '🧙', name: '떠돌이 학자',
     desc: '"싸게 해줄게. 쓸 만한 기술이 하나 있는데 말이야."',
     choices: [
-      { label: '💰 25 지불한다', sub: '무작위 보상 1개', disabled: () => player.gold < 25,
+      { icon: '💰', tint: 't-gold', label: '25 골드 지불한다', sub: '무작위 보상 1개', disabled: () => player.gold < 25,
         act() { player.gold -= 25; applyRandomReward(); } },
-      { label: '🚶 떠난다', act() { setLog('학자를 지나쳐 왔다.'); } },
+      { icon: '🚶', tint: 't-gray', label: '떠난다', act() { setLog('학자를 지나쳐 왔다.'); } },
     ],
   },
 ];
@@ -1311,7 +1382,7 @@ function showEvent() {
   const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
   showChoiceOverlay(`${ev.icon} ${ev.name}`, ev.desc,
     ev.choices.map(c => ({
-      html: `<b>${c.label}</b>` + (c.sub ? `<small>${c.sub}</small>` : ''),
+      icon: c.icon, tint: c.tint, name: c.label, desc: c.sub,
       disabled: c.disabled ? c.disabled() : false,
       onPick: () => {
         if (state !== 'event') return;
@@ -1327,11 +1398,11 @@ function showEvent() {
 function showShop() {
   state = 'shop';
   const items = [
-    { icon: '💊', name: '회복 물약', desc: '체력 35% 회복', price: 40,
+    { icon: '💊', tint: 't-green', name: '회복 물약', desc: '체력 35% 회복', price: 40,
       act() { const h = Math.round(player.maxHp * 0.35); player.hp = Math.min(player.maxHp, player.hp + h); setLog(`💊 체력 +${h}`); celebrateFX('💊', '체력 +' + h); } },
-    { icon: '🎴', name: '수련 두루마리', desc: '무작위 보상 1개', price: 60, act: applyRandomReward },
-    { icon: '🏺', name: '고대 유물', desc: '무작위 유물 1개', price: 110, act() { giveRandomRelic('🛒 구매!'); } },
-    { icon: '❤️', name: '생명의 정수', desc: '최대 체력 +10', price: 55,
+    { icon: '🎴', tint: 't-orange', name: '수련 두루마리', desc: '무작위 보상 1개', price: 60, act: applyRandomReward },
+    { icon: '🏺', tint: 't-purple', name: '고대 유물', desc: '무작위 유물 1개', price: 110, act() { giveRandomRelic('🛒 구매!'); } },
+    { icon: '❤️', tint: 't-pink', name: '생명의 정수', desc: '최대 체력 +10', price: 55,
       act() { player.maxHp += 10; player.hp += 10; setLog('❤️ 최대 체력 +10'); celebrateFX('❤️', '최대 체력 +10'); } },
   ];
   renderShop(items);
@@ -1339,7 +1410,8 @@ function showShop() {
 
 function renderShop(items) {
   const cards = items.map(it => ({
-    html: `<b>${it.icon} ${it.name}</b><small>${it.desc} — <span class="gold">💰${it.price}</span>${it.sold ? ' (품절)' : ''}</small>`,
+    icon: it.icon, tint: it.tint, name: it.name,
+    desc: `${it.desc} — <span class="gold">💰${it.price}</span>${it.sold ? ' (품절)' : ''}`,
     disabled: it.sold || player.gold < it.price,
     onPick: () => {
       if (state !== 'shop') return;
@@ -1352,7 +1424,7 @@ function renderShop(items) {
     },
   }));
   cards.push({
-    html: '<b>🚪 나가기</b>',
+    icon: '🚪', tint: 't-brown', name: '나가기',
     onPick: () => {
       if (state !== 'shop') return;
       hideChoiceOverlay();
@@ -1365,61 +1437,72 @@ function renderShop(items) {
 // ── 휴식 노드 ─────────────────────────────────────────
 function showRest() {
   state = 'rest';
-  showChoiceOverlay('🏕 휴식처', '모닥불 앞에서 잠시 숨을 돌린다.', [
-    { html: '<b>😴 푹 쉰다</b><small>체력 40% 회복</small>',
+  showChoiceOverlay('🏕️ 휴식처', '모닥불 앞에서 잠시 숨을 돌린다.', [
+    { icon: '😴', tint: 't-green', name: '푹 쉰다', desc: '체력 40% 회복',
       onPick: () => {
         if (state !== 'rest') return;
         const h = Math.round(player.maxHp * 0.4);
         player.hp = Math.min(player.maxHp, player.hp + h);
         hideChoiceOverlay();
-        setLog(`🏕 체력 +${h} 회복!`);
+        setLog(`🏕️ 체력 +${h} 회복!`);
         nodeDone();
       } },
-    { html: '<b>🔨 단련한다</b><small>공격력 +2</small>',
+    { icon: '🔨', tint: 't-red', name: '단련한다', desc: '공격력 +2',
       onPick: () => {
         if (state !== 'rest') return;
         player.atk += 2;
         hideChoiceOverlay();
-        setLog('🏕 단련! 공격력 +2');
+        setLog('🏕️ 단련! 공격력 +2');
         nodeDone();
       } },
   ]);
 }
 
-// ── 소지품 바 + 도감 ─────────────────────────────────
-function updatePerkBar() {
-  const rIcons = [...relics].map(i => RELICS[i].icon).join('');
-  const wEntries = Object.entries(ownedRewards);
-  const wIcons = wEntries.map(([i, n]) => `${REWARDS[i].icon}${n > 1 ? '×' + n : ''}`).join(' ');
-  const parts = [];
-  if (rIcons) parts.push(`🏺 ${rIcons}`);
-  if (wIcons) parts.push(`🎴 ${wIcons}`);
-  document.getElementById('perk-bar').innerHTML = parts.length
-    ? `${parts.join('  ·  ')} <span class="hint">— 눌러서 상세 보기</span>`
-    : `소지품 없음 <span class="hint">— 눌러서 유물·보상 목록 보기</span>`;
+// ── 퀵메뉴(가방+핫바) + 인벤토리(아이콘 그리드) ─────────
+function updatePerkBar() { // 이름 유지 (모든 획득 경로에서 호출됨) — 퀵바 렌더
+  const items = [
+    ...[...relics].map(i => ({ icon: RELICS[i].icon, tint: RELICS[i].tint, n: 0 })),
+    ...Object.entries(ownedRewards).map(([i, n]) => ({ icon: REWARDS[i].icon, tint: REWARDS[i].tint, n })),
+  ];
+  const total = relics.size + Object.values(ownedRewards).reduce((s, n) => s + n, 0);
+  const badge = document.getElementById('bag-count');
+  badge.style.display = total > 0 ? '' : 'none';
+  badge.textContent = total;
+  document.getElementById('qb-items').innerHTML = items.length
+    ? items.map(it => `<span class="qb-item ${it.tint}">${it.icon}${it.n > 1 ? `<span class="n">×${it.n}</span>` : ''}</span>`).join('')
+    : '<span class="hint">획득한 유물·보상이 여기에 — 🎒을 눌러 전체 보기</span>';
+}
+
+// 인벤토리: 아이콘 그리드 → 탭하면 하단에 상세 설명
+function invDetail(kind, i) {
+  const d = document.getElementById('inv-detail');
+  if (kind === null) {
+    d.innerHTML = '<b>아이콘을 눌러 설명을 확인하세요</b><small>색이 있는 아이콘 = 보유 중 · 흐린 아이콘 = 미보유 도감</small>';
+    return;
+  }
+  const item = kind === 'relic' ? RELICS[i] : REWARDS[i];
+  const own = kind === 'relic' ? (relics.has(i) ? '보유 중' : '미보유') : (ownedRewards[i] ? `보유 ×${ownedRewards[i]}` : '미보유');
+  d.innerHTML = `<b>${item.icon} ${item.name}</b> <span class="cnt" style="color:#3d7fbc;font-size:12.5px">— ${own}</span><small>${item.desc}</small>`;
+  document.querySelectorAll('.inv-grid .item-icon').forEach(el =>
+    el.classList.toggle('sel', el.dataset.kind === kind && +el.dataset.i === i));
 }
 
 function renderCodex() {
-  let html = '<div class="codex-sec">🏺 유물 (규칙 변경 — 정예·보스·이벤트·상점)</div>';
-  html += RELICS.map((r, i) => {
-    const own = relics.has(i);
-    return `<div class="codex-row${own ? ' owned' : ''}">
-      <div><b>${r.icon} ${r.name}</b><small>${r.desc}</small></div>
-      <div class="cnt">${own ? '보유' : ''}</div>
-    </div>`;
-  }).join('');
-  html += '<div class="codex-sec">🎴 보상 (스탯 강화 — 전투 승리)</div>';
-  html += REWARDS.map((r, i) => {
-    const n = ownedRewards[i] || 0;
-    return `<div class="codex-row${n ? ' owned' : ''}">
-      <div><b>${r.icon} ${r.name}</b><small>${r.desc}</small></div>
-      <div class="cnt">${n ? '보유 ×' + n : ''}</div>
-    </div>`;
-  }).join('');
+  const tile = (kind, i, item, owned, count) =>
+    `<button class="item-icon ${item.tint}${owned ? '' : ' dim'}" data-kind="${kind}" data-i="${i}">` +
+    `${item.icon}${count > 1 ? `<span class="n">×${count}</span>` : ''}</button>`;
+  let html = `<div class="inv-sec">🏺 유물 (${relics.size}/${RELICS.length}) — 정예·보스·이벤트·상점에서 획득</div>`;
+  html += `<div class="inv-grid">${RELICS.map((r, i) => tile('relic', i, r, relics.has(i), 0)).join('')}</div>`;
+  const wCount = Object.values(ownedRewards).reduce((s, n) => s + n, 0);
+  html += `<div class="inv-sec">🎴 보상 (보유 ${wCount}) — 전투 승리 시 획득</div>`;
+  html += `<div class="inv-grid">${REWARDS.map((r, i) => tile('reward', i, r, ownedRewards[i], ownedRewards[i] || 0)).join('')}</div>`;
   document.getElementById('codex-list').innerHTML = html;
+  document.querySelectorAll('.inv-grid .item-icon').forEach(el =>
+    el.addEventListener('click', () => { SFX.ui(); invDetail(el.dataset.kind, +el.dataset.i); }));
+  invDetail(null);
 }
 
-document.getElementById('perk-bar').addEventListener('click', () => {
+document.getElementById('quick-bar').addEventListener('click', () => {
   SFX.ui();
   renderCodex();
   document.getElementById('codex-overlay').classList.remove('hidden');
