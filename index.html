@@ -221,6 +221,49 @@
     background: rgba(253, 246, 227, 0.9); border: 2px solid #d8c5a0; border-radius: 10px;
     color: #5a4630; font-size: 15px; padding: 4px 9px; cursor: pointer; font-family: inherit;
   }
+
+  /* ── 획득 임팩트 연출 ── */
+  .reward-card.picked {
+    border-color: #f7c948 !important; background: #fff3cf !important;
+    transform: scale(1.07);
+    box-shadow: 0 0 0 4px rgba(247, 201, 72, 0.45);
+    transition: transform 0.15s;
+  }
+  @keyframes fxPop {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    22% { transform: translate(-50%, -50%) scale(1.28); opacity: 1; }
+    45% { transform: translate(-50%, -50%) scale(1); }
+    80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.05); opacity: 0; }
+  }
+  .fx-banner {
+    position: absolute; left: 50%; top: 42%; z-index: 8;
+    transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none;
+    animation: fxPop 1s ease forwards;
+  }
+  .fx-banner .fx-icon { font-size: 56px; line-height: 1.1; filter: drop-shadow(0 3px 6px rgba(60, 40, 0, 0.4)); }
+  .fx-banner .fx-name {
+    font-size: 16px; font-weight: bold; color: #fff7e6;
+    background: rgba(62, 48, 30, 0.8); border-radius: 10px;
+    padding: 4px 14px; margin-top: 6px; white-space: nowrap;
+  }
+  @keyframes fxStar {
+    0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.25) rotate(220deg); opacity: 0; }
+  }
+  .fx-star {
+    position: absolute; left: 50%; top: 42%; z-index: 8;
+    font-size: 21px; pointer-events: none;
+    animation: fxStar 0.85s ease-out forwards;
+  }
+  @keyframes fxFlash { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+  .fx-flash {
+    position: absolute; inset: 0; z-index: 7; border-radius: 12px;
+    background: radial-gradient(circle, rgba(255, 240, 170, 0.95), rgba(255, 240, 170, 0));
+    pointer-events: none;
+    animation: fxFlash 0.55s ease-out forwards;
+  }
   footer { font-size: 12px; color: #5f7040; text-align: center; }
 </style>
 </head>
@@ -319,10 +362,12 @@ const pcEl = document.getElementById('pc');
 const ecEl = document.getElementById('ec');
 
 // 슬라임 캐릭터 SVG 생성 — 외부 이미지 없이 전부 코드로 그림
+// o.back = 몸 뒤 장식(망토·검), o.front = 몸 앞 장식(방패·물약), o.scale = 몸집 (바닥 중심 기준)
 function slimeSVG(o) {
   const ey = 44; // 눈높이
   const p = [];
   p.push(`<ellipse cx="50" cy="79" rx="33" ry="6" fill="rgba(40,60,20,0.2)"/>`);
+  if (o.back) p.push(...o.back);
   if (o.spikes) p.push(
     `<path d="M30 26 L22 8 L40 19 Z" fill="${o.dark}"/>`,
     `<path d="M70 26 L78 8 L60 19 Z" fill="${o.dark}"/>`);
@@ -346,10 +391,87 @@ function slimeSVG(o) {
   if (o.blush) p.push(
     `<ellipse cx="27" cy="${ey + 8}" rx="5" ry="3.5" fill="#f2a0b4" opacity="0.75"/>`,
     `<ellipse cx="73" cy="${ey + 8}" rx="5" ry="3.5" fill="#f2a0b4" opacity="0.75"/>`);
-  return `<svg viewBox="0 0 100 86" xmlns="http://www.w3.org/2000/svg">${p.join('')}</svg>`;
+  if (o.front) p.push(...o.front);
+  const inner = o.scale && o.scale !== 1
+    ? `<g transform="translate(50 79) scale(${o.scale}) translate(-50 -79)">${p.join('')}</g>`
+    : p.join('');
+  return `<svg viewBox="0 0 100 86" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
 }
 
 const PLAYER_SVG = slimeSVG({ body: '#ef6262', hi: '#f79a9a', dark: '#c23e3e', crown: true, blush: true });
+
+// ── 주인공 성장 시각화: 보상·유물을 얻을수록 장비가 눈에 보이게 추가됨 ──
+function heroSVG() {
+  const back = [], front = [];
+
+  // 유물 수 → 망토 (1개 파랑 → 3개 보라 → 5개 금색)
+  const rn = relics.size;
+  if (rn >= 1) {
+    const [cf, cs] = rn >= 5 ? ['#f7c948', '#d9a520'] : rn >= 3 ? ['#9b6fd6', '#7a4fb3'] : ['#5aa8e8', '#3d7fbc'];
+    back.push(`<path d="M22 30 Q2 46 8 74 Q26 66 25 44 Z" fill="${cf}" stroke="${cs}" stroke-width="2" stroke-linejoin="round"/>`);
+  }
+
+  // 공격력 → 옆에 꽂힌 검 (8+ 강철검 → 14+ 금검 → 22+ 대검)
+  if (player.atk >= 8) {
+    const gold = player.atk >= 14;
+    const big = player.atk >= 22 ? 1.25 : 1;
+    const blade = gold ? '#f7c948' : '#dde3ec';
+    const bladeDark = gold ? '#d9a520' : '#98a2b3';
+    back.push(`<g transform="translate(91 79) scale(${big})">
+      <rect x="-2.5" y="-17" width="5" height="17" rx="2" fill="${blade}" stroke="${bladeDark}" stroke-width="1.5"/>
+      <rect x="-8" y="-20" width="16" height="4.5" rx="2" fill="#8a6a3a" stroke="#6b4f28" stroke-width="1"/>
+      <rect x="-2" y="-31" width="4" height="11" rx="1.5" fill="#8a6a3a"/>
+      <circle cx="0" cy="-33" r="3" fill="${blade}" stroke="${bladeDark}" stroke-width="1.5"/>
+    </g>`);
+  }
+
+  // 방어 효율 → 기대 세운 방패 (5+ 나무 → 9+ 강철)
+  if (player.defGain >= 5) {
+    const iron = player.defGain >= 9;
+    const [sf, ss] = iron ? ['#c3cdd9', '#8b98a8'] : ['#b3874f', '#8a6a3a'];
+    front.push(`<g transform="translate(11 63)">
+      <path d="M0 -12 Q9 -17 18 -12 Q18 2 9 9 Q0 2 0 -12 Z" fill="${sf}" stroke="${ss}" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="9" cy="-4" r="2.5" fill="${ss}"/>
+    </g>`);
+  }
+
+  // 회복 효율 → 허리춤의 물약
+  if (player.healGain >= 4) front.push(`<g transform="translate(78 62)">
+    <rect x="-3" y="-6" width="6" height="4" rx="1" fill="#8a6a3a"/>
+    <path d="M-4.5 -2 Q-6 6 0 6 Q6 6 4.5 -2 Z" fill="#7de08a" stroke="#3f9c4d" stroke-width="1.5"/>
+  </g>`);
+
+  // 전투 광란 → 빨간 머리띠
+  if (ownedRewards[1]) front.push(
+    `<path d="M21 33 Q50 26 79 33" fill="none" stroke="#e04343" stroke-width="5" stroke-linecap="round"/>`,
+    `<path d="M78 33 L86 28 M78 33 L87 35" stroke="#e04343" stroke-width="3.5" stroke-linecap="round" fill="none"/>`);
+
+  // 수호의 각인 → 하늘색 보호 오라
+  if (player.startShield > 0) front.push(`<circle cx="50" cy="50" r="41" fill="none" stroke="rgba(125,196,240,0.65)" stroke-width="3" stroke-dasharray="11 8" stroke-linecap="round"/>`);
+
+  // 연쇄의 달인 → 금목걸이
+  if (player.bonusTier >= 1) front.push([35, 43, 50, 57, 65].map((x, i) =>
+    `<circle cx="${x}" cy="${[66, 69, 70, 69, 66][i]}" r="2.6" fill="#f7c948" stroke="#d9a520" stroke-width="1"/>`).join(''));
+
+  // 흡혈 → 송곳니
+  if (player.lifesteal > 0) front.push(
+    `<path d="M43 55 L45 61 L47 55 Z" fill="#fff"/>`,
+    `<path d="M57 55 L55 61 L53 55 Z" fill="#fff"/>`);
+
+  // 최대 체력 → 몸집 성장 (최대 +16%)
+  const scale = Math.min(1.16, 1 + Math.max(0, player.maxHp - 100) / 500);
+
+  return slimeSVG({ body: '#ef6262', hi: '#f79a9a', dark: '#c23e3e', crown: true, blush: true, back, front, scale });
+}
+
+let heroSig = '';
+function updateHero() {
+  const sig = [player.atk, player.defGain, player.healGain, player.maxHp, player.startShield,
+    player.lifesteal, player.bonusTier, ownedRewards[1] ? 1 : 0, relics.size].join(',');
+  if (sig === heroSig) return;
+  heroSig = sig;
+  pcEl.innerHTML = heroSVG();
+}
 const ENEMY_SKINS = [
   { body: '#5aa8e8', hi: '#8ec6f2', dark: '#3d7fbc' },
   { body: '#9b6fd6', hi: '#bd9ce8', dark: '#7a4fb3' },
@@ -390,6 +512,34 @@ function floatText(text, color, side) {
   s.style.top = (16 + Math.random() * 22) + 'px';
   battle.appendChild(s);
   setTimeout(() => s.remove(), 950);
+}
+
+// ── 획득 임팩트: 배너 + 별 파티클 + 플래시 (보드 위 오버레이) ──
+function celebrateFX(icon, name) {
+  const wrap = document.getElementById('board-wrap');
+  const banner = document.createElement('div');
+  banner.className = 'fx-banner';
+  banner.innerHTML = `<div class="fx-icon">${icon}</div><div class="fx-name">${name}</div>`;
+  wrap.appendChild(banner);
+  const stars = ['✨', '⭐', '💫', '🌟'];
+  const spawned = [banner];
+  for (let i = 0; i < 10; i++) {
+    const s = document.createElement('span');
+    s.className = 'fx-star';
+    s.textContent = stars[i % stars.length];
+    const ang = (i / 10) * Math.PI * 2 + Math.random() * 0.55;
+    const dist = 75 + Math.random() * 65;
+    s.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+    s.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+    s.style.animationDelay = (Math.random() * 0.08) + 's';
+    wrap.appendChild(s);
+    spawned.push(s);
+  }
+  const flash = document.createElement('div');
+  flash.className = 'fx-flash';
+  wrap.appendChild(flash);
+  spawned.push(flash);
+  setTimeout(() => spawned.forEach(e => e.remove()), 1050);
 }
 
 // ── 사운드 (Web Audio 합성 — 외부 파일 없음, 개발가이드 11절) ──
@@ -558,6 +708,7 @@ function addRelic(i, silent) {
   if (!silent) {
     setLog(`🏺 유물 [${RELICS[i].icon} ${RELICS[i].name}] 획득!`);
     SFX.relic();
+    celebrateFX(RELICS[i].icon, RELICS[i].name);
   }
 }
 
@@ -572,6 +723,8 @@ function giveRandomRelic(prefix) {
   if (i < 0) { gainGold(50); setLog(`${prefix} 이미 모든 유물을 보유해 💰50을 받았다`); return; }
   addRelic(i, true);
   setLog(`${prefix} 🏺 [${RELICS[i].icon} ${RELICS[i].name}] 획득!`);
+  SFX.relic();
+  celebrateFX(RELICS[i].icon, RELICS[i].name);
 }
 
 // ── 메타 성장 (영구, localStorage — 개발가이드 5절) ────
@@ -967,7 +1120,7 @@ function showChoiceOverlay(title, sub, cards) {
     btn.className = 'reward-card';
     btn.innerHTML = c.html;
     if (c.disabled) btn.disabled = true;
-    else btn.addEventListener('click', () => { SFX.ui(); c.onPick(); });
+    else btn.addEventListener('click', () => { SFX.ui(); c.onPick(btn); });
     wrap.appendChild(btn);
   });
   document.getElementById('reward-overlay').classList.remove('hidden');
@@ -1001,6 +1154,7 @@ function applyRandomReward() {
   ownedRewards[idx] = (ownedRewards[idx] || 0) + 1;
   updatePerkBar();
   setLog(`🎴 [${r.icon} ${r.name}] 획득! (${r.desc})`);
+  celebrateFX(r.icon, r.name);
 }
 
 function showRewards() {
@@ -1019,9 +1173,18 @@ function showRewards() {
       : '보상을 하나 선택하세요',
     rewardChoices.map(ri => {
       const r = REWARDS[ri];
-      return { html: `<b>${r.icon} ${r.name}</b><small>${r.desc}</small>`, onPick: () => pickReward(ri) };
+      return { html: `<b>${r.icon} ${r.name}</b><small>${r.desc}</small>`, onPick: btn => pickWithFx(btn, () => pickReward(ri)) };
     })
   );
+}
+
+// 카드 선택 연출: 고른 카드가 금색으로 커진 뒤 실제 처리
+let pickingFx = false;
+function pickWithFx(btn, then) {
+  if (pickingFx) return;
+  pickingFx = true;
+  if (btn) btn.classList.add('picked');
+  setTimeout(() => { pickingFx = false; then(); }, 400);
 }
 
 function pickReward(idx) {
@@ -1035,6 +1198,7 @@ function pickReward(idx) {
 
   if (rewardPicksLeft > 0) {
     setLog(`${r.icon} [${r.name}] 획득! 보상을 하나 더 선택하세요`);
+    celebrateFX(r.icon, r.name);
     updateHud();
     showRewards();
     return;
@@ -1042,6 +1206,7 @@ function pickReward(idx) {
 
   hideChoiceOverlay();
   setLog(`${r.icon} [${r.name}] 획득!`);
+  celebrateFX(r.icon, r.name);
   updateHud();
   if (pendingRelicPick) { pendingRelicPick = false; showRelicChoice(); return; }
   finishNode();
@@ -1066,12 +1231,12 @@ function showRelicChoice() {
       const r = RELICS[ri];
       return {
         html: `<b>${r.icon} ${r.name}</b><small>${r.desc}</small>`,
-        onPick: () => {
+        onPick: btn => pickWithFx(btn, () => {
           if (state !== 'relic') return;
           hideChoiceOverlay();
           addRelic(ri);
           finishNode();
-        },
+        }),
       };
     })
   );
@@ -1163,11 +1328,11 @@ function showShop() {
   state = 'shop';
   const items = [
     { icon: '💊', name: '회복 물약', desc: '체력 35% 회복', price: 40,
-      act() { const h = Math.round(player.maxHp * 0.35); player.hp = Math.min(player.maxHp, player.hp + h); setLog(`💊 체력 +${h}`); } },
+      act() { const h = Math.round(player.maxHp * 0.35); player.hp = Math.min(player.maxHp, player.hp + h); setLog(`💊 체력 +${h}`); celebrateFX('💊', '체력 +' + h); } },
     { icon: '🎴', name: '수련 두루마리', desc: '무작위 보상 1개', price: 60, act: applyRandomReward },
     { icon: '🏺', name: '고대 유물', desc: '무작위 유물 1개', price: 110, act() { giveRandomRelic('🛒 구매!'); } },
     { icon: '❤️', name: '생명의 정수', desc: '최대 체력 +10', price: 55,
-      act() { player.maxHp += 10; player.hp += 10; setLog('❤ 최대 체력 +10'); } },
+      act() { player.maxHp += 10; player.hp += 10; setLog('❤️ 최대 체력 +10'); celebrateFX('❤️', '최대 체력 +10'); } },
   ];
   renderShop(items);
 }
@@ -1582,6 +1747,7 @@ function flashPanel(id) {
 }
 
 function updateHud() {
+  updateHero(); // 성장 장비 반영 (변경 없으면 캐시로 스킵)
   document.getElementById('player-hp-bar').style.width = (Math.max(0, player.hp) / player.maxHp * 100) + '%';
   document.getElementById('player-stats').innerHTML =
     `HP ${Math.max(0, player.hp)}/${player.maxHp} · 🛡️ ${player.shield} · <span class="gold">💰${player.gold}</span><br>` +
@@ -1794,7 +1960,7 @@ window.game = {
     victory, finishNode, nodeDone, gameOver, showMap, genActMap, startBattle,
     spawnEnemy, showEvent, showShop, showRest, showRewards, showRelicChoice,
     addRelic, gainGold, applyRandomReward, spawnSkulls, afterFall, resolveChain,
-    saveMeta, renderMeta, drawMapLines, SFX, setBgm,
+    saveMeta, renderMeta, drawMapLines, SFX, setBgm, celebrateFX, heroSVG, updateHero,
     getAudio: () => ({ actx, soundOn, bgmMode }),
     RELICS, REWARDS, EVENTS, META_UPS, NODE_CFG,
     setDepth: v => { depth = v; }, setAct: v => { act = v; },
