@@ -245,18 +245,39 @@
     text-shadow: 0 1px 3px rgba(0,0,0,0.6);
   }
 
-  /* ── 인벤토리 + 메타 성장 오버레이 ── */
-  #codex-overlay, #meta-overlay {
+  /* ── 인벤토리 + 메타 성장 + 도움말 오버레이 ── */
+  #codex-overlay, #meta-overlay, #help-overlay {
     position: absolute; inset: 0; border-radius: 12px;
     background: rgba(62, 48, 30, 0.92);
     display: flex; flex-direction: column; align-items: center; gap: 8px;
     padding: 16px 0; overflow-y: auto;
   }
-  #codex-overlay { z-index: 5; }
+  #codex-overlay, #help-overlay { z-index: 5; }
   #meta-overlay { z-index: 6; }
-  #codex-overlay.hidden, #meta-overlay.hidden { display: none; }
-  #codex-overlay h1, #meta-overlay h1 { font-size: 20px; margin-bottom: 4px; color: #fff7e6; }
+  #codex-overlay.hidden, #meta-overlay.hidden, #help-overlay.hidden { display: none; }
+  #codex-overlay h1, #meta-overlay h1, #help-overlay h1 { font-size: 20px; margin-bottom: 4px; color: #fff7e6; }
   #meta-overlay p { font-size: 14px; color: #eadfc6; }
+  .help-row {
+    display: flex; align-items: center; gap: 10px;
+    width: 88%; background: #fdf6e3; border-radius: 12px; padding: 7px 11px;
+    font-size: 13.5px; color: #5a4630; border: 2px solid #e2d3b4;
+  }
+  .help-row .item-icon { width: 36px; height: 36px; font-size: 18px; border-width: 2px; border-radius: 10px; }
+  .help-row b { display: block; font-size: 13.5px; }
+  .help-row small { color: #a08c6a; font-size: 12px; line-height: 1.45; display: block; }
+  #help-close {
+    margin-top: 6px; font-size: 15px; padding: 8px 28px; border: none; border-radius: 10px;
+    background: #5aa8e8; border-bottom: 4px solid #3d7fbc;
+    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
+    color: white; cursor: pointer; font-family: inherit; font-weight: bold;
+  }
+  #help-btn {
+    width: 44px; height: 44px; border-radius: 12px; flex: none;
+    background: #5aa8e8; border: 2.5px solid #3d7fbc;
+    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
+    font-size: 20px; cursor: pointer; font-family: inherit;
+  }
+  #help-btn:active { transform: scale(0.94); }
   .codex-row {
     display: flex; justify-content: space-between; align-items: center;
     width: 88%; background: #fdf6e3; border-radius: 12px; padding: 8px 12px;
@@ -326,7 +347,20 @@
     pointer-events: none;
     animation: fxFlash 0.55s ease-out forwards;
   }
-  footer { font-size: 12px; color: #5f7040; text-align: center; }
+  footer {
+    display: flex; justify-content: center; align-items: center;
+    gap: 10px; flex-wrap: wrap; padding: 2px 0;
+  }
+  .lg {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11.5px; color: #4d5c35; font-weight: bold;
+  }
+  .lg .tile {
+    width: 21px; height: 21px; border-radius: 6px; border: 1.5px solid;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; line-height: 1;
+    box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35);
+  }
 </style>
 </head>
 <body>
@@ -382,14 +416,40 @@
       <div id="meta-list" style="display:flex;flex-direction:column;gap:6px;width:100%;align-items:center;"></div>
       <button id="meta-close">닫기</button>
     </div>
+    <div id="help-overlay" class="hidden">
+      <h1>❓ 도움말</h1>
+      <div class="inv-sec">👆 기본 조작</div>
+      <div class="help-row"><span class="item-icon t-sky">👆</span><span><b>같은 색 블록을 드래그로 연결</b><small>2개 이상 이으면 발동 · 길게 이을수록 보너스 배율 상승 · 되돌아가면 취소</small></span></div>
+      <div class="inv-sec">🧊 블록 종류</div>
+      <div class="help-row"><span class="item-icon t-red">⚔️</span><span><b>공격</b><small>연결한 수만큼 적에게 피해</small></span></div>
+      <div class="help-row"><span class="item-icon t-blue">🛡️</span><span><b>방어</b><small>보호막 획득 — 적의 공격을 대신 막아줌</small></span></div>
+      <div class="help-row"><span class="item-icon t-green">♥️</span><span><b>회복</b><small>체력 회복</small></span></div>
+      <div class="help-row"><span class="item-icon t-gray">💀</span><span><b>저주</b><small>연결 불가! 바로 옆 블록을 매칭하면 정화 · 적이 공격할 때마다 늘어남</small></span></div>
+      <div class="inv-sec">✨ 특수 블록</div>
+      <div class="help-row"><span class="item-icon t-orange">💣</span><span><b>폭탄 — 4개 이상 연결하면 생성</b><small>주변 3×3 폭발 · 아무 색 연결에나 끼울 수 있고, 혼자 탭해도 격발</small></span></div>
+      <div class="help-row"><span class="item-icon t-gold">⚡</span><span><b>번개 — 6개 이상 연결하면 생성</b><small>가로+세로 한 줄 전체 제거 · 특수 블록끼리 연쇄 폭발</small></span></div>
+      <div class="inv-sec">🗺 모험 진행</div>
+      <div class="help-row"><span class="item-icon t-brown">🗺</span><span><b>지도에서 다음 노드 선택</b><small>전투 승리 → 보상 → 이동 · 5층마다 👑 보스</small></span></div>
+      <div class="help-row"><span class="item-icon t-purple">👹</span><span><b>정예는 위험하지만 보물</b><small>쓰러뜨리면 🏺 유물 (런 내내 유지되는 특수 능력)</small></span></div>
+      <div class="help-row"><span class="item-icon t-sky">💠</span><span><b>죽어도 강해진다</b><small>쓰러지면 영혼 조각 획득 → [💠 영혼의 각인]에서 영구 강화</small></span></div>
+      <button id="help-close">닫기</button>
+    </div>
   </div>
 
   <div id="quick-bar">
     <button id="bag-btn">🎒<span class="n" id="bag-count" style="display:none"></span></button>
     <div id="qb-items"></div>
+    <button id="help-btn">❓</button>
   </div>
   <div id="log"></div>
-  <footer>같은 색 블록을 드래그로 2개 이상 연결 — ⚔️ 공격 · 🛡️ 방어 · ♥️ 회복 · 💀 저주는 옆에서 매칭해 정화<br>4개+ 연결 시 💣, 6개+ 연결 시 ⚡ 생성 · 전투 후 지도에서 다음 노드 선택 — 정예·보스에게서 🏺 유물 획득</footer>
+  <footer>
+    <span class="lg"><span class="tile t-red">⚔️</span>공격</span>
+    <span class="lg"><span class="tile t-blue">🛡️</span>방어</span>
+    <span class="lg"><span class="tile t-green">♥️</span>회복</span>
+    <span class="lg"><span class="tile t-gray">💀</span>저주</span>
+    <span class="lg"><span class="tile t-orange">💣</span>4연결</span>
+    <span class="lg"><span class="tile t-gold">⚡</span>6연결</span>
+  </footer>
 </div>
 
 <script>
@@ -913,6 +973,7 @@ function newGame() {
   document.getElementById('reward-overlay').classList.add('hidden');
   document.getElementById('codex-overlay').classList.add('hidden');
   document.getElementById('meta-overlay').classList.add('hidden');
+  document.getElementById('help-overlay').classList.add('hidden');
   setLog('🗺 지도에서 첫 노드를 선택하세요!' + (relics.size ? `  ·  🏺 ${[...relics].map(i => RELICS[i].icon).join('')} 보유 시작` : ''));
   showMap();
   updateHud();
@@ -1509,6 +1570,14 @@ document.getElementById('quick-bar').addEventListener('click', () => {
 });
 document.getElementById('codex-close').addEventListener('click', () => {
   document.getElementById('codex-overlay').classList.add('hidden');
+});
+document.getElementById('help-btn').addEventListener('click', e => {
+  e.stopPropagation(); // 퀵바의 인벤토리 열기와 분리
+  SFX.ui();
+  document.getElementById('help-overlay').classList.remove('hidden');
+});
+document.getElementById('help-close').addEventListener('click', () => {
+  document.getElementById('help-overlay').classList.add('hidden');
 });
 
 // ── 막힘 방지: 연결 가능한 쌍이 없으면 전체 재배열 ──────
