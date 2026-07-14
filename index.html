@@ -203,6 +203,11 @@
     margin-top: 6px; font-size: 15px; padding: 8px 28px; border: none; border-radius: 8px;
     background: #5b8def; color: white; cursor: pointer; font-family: inherit;
   }
+  #sound-btn {
+    position: absolute; top: 6px; right: 8px; z-index: 2;
+    background: rgba(31, 31, 43, 0.85); border: 1px solid #3a3a52; border-radius: 8px;
+    color: #c8c8d8; font-size: 15px; padding: 4px 9px; cursor: pointer; font-family: inherit;
+  }
   footer { font-size: 12px; color: #6a6a80; text-align: center; }
 </style>
 </head>
@@ -224,6 +229,7 @@
   <div id="battle">
     <div class="fighter" id="pc">🦸</div>
     <div class="fighter" id="ec">👾</div>
+    <button id="sound-btn">🔊</button>
   </div>
 
   <div id="board-wrap">
@@ -320,6 +326,145 @@ function floatText(text, color, side) {
   setTimeout(() => s.remove(), 950);
 }
 
+// ── 사운드 (Web Audio 합성 — 외부 파일 없음, 개발가이드 11절) ──
+const SOUND_KEY = 'bd_sound';
+let soundOn = (() => { try { return localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) { return true; } })();
+let actx = null, sfxGain = null, bgmGain = null;
+
+function audioInit() {
+  if (actx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  actx = new AC();
+  const master = actx.createGain();
+  master.gain.value = 0.5;
+  master.connect(actx.destination);
+  sfxGain = actx.createGain(); sfxGain.gain.value = 1; sfxGain.connect(master);
+  bgmGain = actx.createGain(); bgmGain.gain.value = 0.13; bgmGain.connect(master);
+}
+// 모바일 자동재생 정책: 첫 입력에서 컨텍스트 생성/재개
+['pointerdown', 'keydown'].forEach(ev =>
+  document.addEventListener(ev, () => {
+    audioInit();
+    if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
+  }, { passive: true }));
+
+function tone(opt) {
+  if (!actx || !soundOn) return;
+  const t0 = actx.currentTime + (opt.delay || 0);
+  const dur = opt.dur || 0.15;
+  const o = actx.createOscillator();
+  const g = actx.createGain();
+  o.type = opt.type || 'square';
+  o.frequency.setValueAtTime(opt.freq, t0);
+  if (opt.freqEnd) o.frequency.exponentialRampToValueAtTime(Math.max(20, opt.freqEnd), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(opt.vol || 0.25, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g);
+  g.connect(opt.out || sfxGain);
+  o.start(t0);
+  o.stop(t0 + dur + 0.05);
+}
+
+let noiseBuf = null;
+function noiseHit(opt) {
+  if (!actx || !soundOn) return;
+  if (!noiseBuf) {
+    noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const t0 = actx.currentTime + (opt.delay || 0);
+  const dur = opt.dur || 0.3;
+  const src = actx.createBufferSource();
+  src.buffer = noiseBuf;
+  const f = actx.createBiquadFilter();
+  f.type = opt.hipass ? 'highpass' : 'lowpass';
+  f.frequency.setValueAtTime(opt.filter || 800, t0);
+  if (opt.filterEnd) f.frequency.exponentialRampToValueAtTime(opt.filterEnd, t0 + dur);
+  const g = actx.createGain();
+  g.gain.setValueAtTime(opt.vol || 0.3, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f);
+  f.connect(g);
+  g.connect(sfxGain);
+  src.start(t0);
+  src.stop(t0 + dur + 0.05);
+}
+
+const SFX = {
+  blip(n) { tone({ freq: Math.min(1100, 330 * Math.pow(1.09, n)), dur: 0.06, vol: 0.12 }); },
+  cancel() { tone({ freq: 220, freqEnd: 160, dur: 0.08, vol: 0.1 }); },
+  attack() { noiseHit({ filter: 2500, filterEnd: 300, dur: 0.14, vol: 0.28 }); tone({ freq: 220, freqEnd: 70, type: 'sawtooth', dur: 0.18, vol: 0.3 }); },
+  defense() { tone({ freq: 520, freqEnd: 780, type: 'triangle', dur: 0.12, vol: 0.25 }); tone({ freq: 660, freqEnd: 990, type: 'triangle', dur: 0.12, vol: 0.18, delay: 0.06 }); },
+  heal() { [523, 659, 784].forEach((f, i) => tone({ freq: f, type: 'sine', dur: 0.14, vol: 0.2, delay: i * 0.06 })); },
+  bomb() { noiseHit({ filter: 500, filterEnd: 60, dur: 0.5, vol: 0.5 }); tone({ freq: 100, freqEnd: 35, type: 'sine', dur: 0.45, vol: 0.5 }); },
+  zap() { tone({ freq: 1400, freqEnd: 90, type: 'sawtooth', dur: 0.22, vol: 0.3 }); noiseHit({ filter: 3000, hipass: true, dur: 0.15, vol: 0.15 }); },
+  purify() { tone({ freq: 880, freqEnd: 1760, type: 'sine', dur: 0.15, vol: 0.18 }); tone({ freq: 1320, freqEnd: 2200, type: 'sine', dur: 0.12, vol: 0.12, delay: 0.07 }); },
+  special() { [660, 880, 1109].forEach((f, i) => tone({ freq: f, dur: 0.08, vol: 0.15, delay: i * 0.05 })); },
+  hurt() { tone({ freq: 160, freqEnd: 55, type: 'sawtooth', dur: 0.25, vol: 0.35 }); noiseHit({ filter: 700, filterEnd: 120, dur: 0.2, vol: 0.2 }); },
+  thorn() { tone({ freq: 700, freqEnd: 300, dur: 0.08, vol: 0.15 }); },
+  coin() { tone({ freq: 990, dur: 0.06, vol: 0.15 }); tone({ freq: 1320, dur: 0.1, vol: 0.15, delay: 0.07 }); },
+  ding() { tone({ freq: 880, type: 'sine', dur: 0.15, vol: 0.22 }); tone({ freq: 1109, type: 'sine', dur: 0.2, vol: 0.18, delay: 0.08 }); },
+  relic() { [659, 830, 988, 1319].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.14, vol: 0.2, delay: i * 0.08 })); },
+  fanfare() { [523, 659, 784, 1047].forEach((f, i) => tone({ freq: f, dur: i === 3 ? 0.3 : 0.1, vol: 0.2, delay: i * 0.1 })); },
+  gameover() { [392, 330, 262].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.35, vol: 0.25, delay: i * 0.3 })); },
+  bossIn() { tone({ freq: 110, type: 'sawtooth', dur: 0.7, vol: 0.3 }); tone({ freq: 55, dur: 0.7, vol: 0.25 }); noiseHit({ filter: 200, dur: 0.6, vol: 0.15 }); },
+  step() { tone({ freq: 240, dur: 0.05, vol: 0.1 }); },
+  ui() { tone({ freq: 600, dur: 0.04, vol: 0.09 }); },
+};
+
+// BGM: 절차 생성 8비트 루프 (16스텝 = 2마디, 8분음표, null = 쉼표. A단조)
+const midiHz = m => 440 * Math.pow(2, (m - 69) / 12);
+const BGM_PATTERNS = {
+  map:    { bpm: 84,  bassType: 'triangle', arpType: 'sine',
+            bass: [45, null, null, null, 40, null, null, null, 41, null, null, null, 43, null, null, null],
+            arp:  [69, null, 72, null, 76, null, null, null, 69, null, 72, null, 74, null, null, null] },
+  battle: { bpm: 116, bassType: 'square', arpType: 'triangle',
+            bass: [45, null, 45, null, 48, null, 45, null, 50, null, 48, null, 43, null, 45, null],
+            arp:  [69, 72, 76, 72, 77, 76, 72, 69, 69, 72, 76, 72, 79, 77, 76, 72] },
+  boss:   { bpm: 138, bassType: 'sawtooth', arpType: 'square',
+            bass: [33, 33, null, 33, 33, null, 36, null, 33, 33, null, 33, 32, null, 31, null],
+            arp:  [69, null, 68, 69, 72, 69, 68, null, 69, null, 68, 69, 75, 74, 72, 68] },
+};
+let bgmMode = null, bgmStep = 0, bgmNextT = 0;
+
+function setBgm(mode) {
+  if (bgmMode !== mode) { bgmMode = mode; bgmStep = 0; bgmNextT = 0; }
+}
+
+// 룩어헤드 스케줄러: 0.3초 앞까지 예약 (setInterval 지터 흡수)
+setInterval(() => {
+  if (!actx || !soundOn || !bgmMode || actx.state !== 'running') return;
+  const p = BGM_PATTERNS[bgmMode];
+  const stepDur = 60 / p.bpm / 2;
+  if (bgmNextT < actx.currentTime) bgmNextT = actx.currentTime + 0.05;
+  while (bgmNextT < actx.currentTime + 0.3) {
+    const b = p.bass[bgmStep], a = p.arp[bgmStep];
+    const delay = bgmNextT - actx.currentTime;
+    if (b !== null) tone({ freq: midiHz(b), type: p.bassType, dur: stepDur * 0.9, vol: 0.22, delay, out: bgmGain });
+    if (a !== null) tone({ freq: midiHz(a), type: p.arpType, dur: stepDur * 0.55, vol: 0.14, delay, out: bgmGain });
+    bgmNextT += stepDur;
+    bgmStep = (bgmStep + 1) % 16;
+  }
+}, 100);
+
+const soundBtn = document.getElementById('sound-btn');
+function renderSoundBtn() { soundBtn.textContent = soundOn ? '🔊' : '🔇'; }
+soundBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  soundOn = !soundOn;
+  try { localStorage.setItem(SOUND_KEY, soundOn ? '1' : '0'); } catch (err) {}
+  renderSoundBtn();
+  if (soundOn) {
+    audioInit();
+    if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
+    SFX.ui();
+  }
+});
+renderSoundBtn();
+
 // ── 유물 (규칙 변경 패시브 — 개발가이드 5절) ──────────
 const RELICS = [
   { icon: '🔥', name: '불꽃의 심장', desc: '공격 연결 5개 이상 시 적에게 화상 (2턴간 턴당 6 피해)' },
@@ -344,7 +489,10 @@ const shieldCap = () => hasRelic(R_WARD) ? 50 : 30;
 function addRelic(i, silent) {
   relics.add(i);
   updatePerkBar();
-  if (!silent) setLog(`🏺 유물 [${RELICS[i].icon} ${RELICS[i].name}] 획득!`);
+  if (!silent) {
+    setLog(`🏺 유물 [${RELICS[i].icon} ${RELICS[i].name}] 획득!`);
+    SFX.relic();
+  }
 }
 
 function randomUnownedRelic() {
@@ -400,6 +548,7 @@ function renderMeta() {
       btn.textContent = `💠${cost}`;
       btn.disabled = meta.shards < cost;
       btn.addEventListener('click', () => {
+        SFX.coin();
         meta.shards -= cost;
         meta.up[u.key] = lv + 1;
         saveMeta();
@@ -559,6 +708,7 @@ function reachableNodes() {
 
 function showMap() {
   state = 'map';
+  setBgm('map');
   document.getElementById('map-act').textContent = act;
   const body = document.getElementById('map-body');
   let html = '<svg id="map-svg"></svg>';
@@ -618,6 +768,7 @@ function enterNode(f, i) {
   map.cur = { f, i };
   map.path.push({ f, i });
   depth++;
+  SFX.step();
   document.getElementById('map-overlay').classList.add('hidden');
   const type = map.floors[f].nodes[i];
   if (type === 'battle' || type === 'elite' || type === 'boss') startBattle(type);
@@ -651,6 +802,8 @@ function startBattle(kind) {
   spawnEnemy(kind);
   const names = { battle: '⚔ 전투 시작!', elite: '👹 정예 출현! (유물을 노려라)', boss: '👑 보스전!' };
   setLog(names[kind]);
+  setBgm(kind === 'boss' ? 'boss' : 'battle');
+  if (kind === 'boss') SFX.bossIn();
   if (pendingCurse > 0) {
     const c = spawnSkulls(pendingCurse);
     pendingCurse = 0;
@@ -702,6 +855,8 @@ function victory() {
   if (kind === 'boss') g = Math.round(g * 2.5);
   g = gainGold(g);
   setLog(`🎉 승리! 💰 +${g}`);
+  SFX.fanfare();
+  SFX.coin();
 
   if (kind === 'boss') {
     bossKills++;
@@ -722,6 +877,8 @@ function victory() {
 function gameOver() {
   player.hp = 0;
   state = 'over';
+  setBgm(null);
+  SFX.gameover();
   const earned = depth + bossKills * 3;
   meta.shards += earned;
   saveMeta();
@@ -743,7 +900,7 @@ function showChoiceOverlay(title, sub, cards) {
     btn.className = 'reward-card';
     btn.innerHTML = c.html;
     if (c.disabled) btn.disabled = true;
-    else btn.addEventListener('click', () => c.onPick());
+    else btn.addEventListener('click', () => { SFX.ui(); c.onPick(); });
     wrap.appendChild(btn);
   });
   document.getElementById('reward-overlay').classList.remove('hidden');
@@ -802,6 +959,7 @@ function showRewards() {
 
 function pickReward(idx) {
   if (state !== 'reward') return;
+  SFX.ding();
   const r = REWARDS[idx];
   r.apply(player);
   ownedRewards[idx] = (ownedRewards[idx] || 0) + 1;
@@ -955,6 +1113,7 @@ function renderShop(items) {
       if (state !== 'shop') return;
       player.gold -= it.price;
       it.sold = true;
+      SFX.coin();
       it.act();
       updateHud();
       renderShop(items);
@@ -1029,6 +1188,7 @@ function renderCodex() {
 }
 
 document.getElementById('perk-bar').addEventListener('click', () => {
+  SFX.ui();
   renderCodex();
   document.getElementById('codex-overlay').classList.remove('hidden');
 });
@@ -1105,7 +1265,7 @@ canvas.addEventListener('pointerdown', e => {
   if (state !== 'play') return;
   canvas.setPointerCapture(e.pointerId);
   const c = pointerToCell(e);
-  if (c && grid[c.x][c.y] && grid[c.x][c.y].type !== SKULL) chain = [c];
+  if (c && grid[c.x][c.y] && grid[c.x][c.y].type !== SKULL) { chain = [c]; SFX.blip(1); }
 });
 
 canvas.addEventListener('pointermove', e => {
@@ -1116,7 +1276,7 @@ canvas.addEventListener('pointermove', e => {
   // 백트래킹: 직전 블록으로 되돌아가면 마지막 해제
   if (chain.length >= 2) {
     const prev = chain[chain.length - 2];
-    if (c.x === prev.x && c.y === prev.y) { chain.pop(); return; }
+    if (c.x === prev.x && c.y === prev.y) { chain.pop(); SFX.cancel(); return; }
   }
   if (inChain(c.x, c.y)) return;
   const cand = grid[c.x][c.y];
@@ -1132,6 +1292,7 @@ canvas.addEventListener('pointermove', e => {
     if (chainType !== null && cand.type !== chainType) return;
   }
   chain.push(c);
+  SFX.blip(chain.length);
 });
 
 canvas.addEventListener('pointerup', () => {
@@ -1222,6 +1383,7 @@ function resolveChain() {
       setTimeout(() => floatText('+' + drain, '#7fe08a', 'left'), 300);
     }
     setLog(msg);
+    SFX.attack();
     flashPanel('enemy-panel');
     // 연출: 플레이어 돌진 → 적 피격
     playAnim(pcEl, 'anim-lungeR', 400);
@@ -1236,20 +1398,22 @@ function resolveChain() {
     player.shield = Math.min(shieldCap(), player.shield + gain);
     const actual = player.shield - before;
     setLog(`🛡 방어 ×${n}! 보호막 +${actual}` + (actual < gain ? ` (상한 ${shieldCap()})` : ''));
+    SFX.defense();
     playAnim(pcEl, 'anim-buffB', 520);
     floatText('+' + actual + '🛡', '#7fa8ff', 'left');
   } else {
     const heal = Math.round(player.healGain * n * bonus);
     player.hp = Math.min(player.maxHp, player.hp + heal);
     setLog(`♥ 회복 ×${n}! 체력 +${heal}`);
+    SFX.heal();
     playAnim(pcEl, 'anim-buffG', 520);
     floatText('+' + heal, '#7fe08a', 'left');
   }
 
   if (hasRelic(R_REGEN)) player.hp = Math.min(player.maxHp, player.hp + 2); // 재생의 부적
-  if (bombCount > 0) appendLog(`💣 폭발 ×${bombCount}`);
-  if (lightningCount > 0) appendLog(`⚡ 번개 ×${lightningCount}`);
-  if (skullPurged > 0) appendLog(`💀 저주 ${skullPurged}개 정화!`);
+  if (bombCount > 0) { appendLog(`💣 폭발 ×${bombCount}`); SFX.bomb(); }
+  if (lightningCount > 0) { appendLog(`⚡ 번개 ×${lightningCount}`); SFX.zap(); }
+  if (skullPurged > 0) { appendLog(`💀 저주 ${skullPurged}개 정화!`); SFX.purify(); }
 
   // 제거 후 열 단위 압축 + 위에서 새 블록 공급
   for (const c of removal.values()) grid[c.x][c.y] = null;
@@ -1262,6 +1426,7 @@ function resolveChain() {
     const specialType = dragLen >= lightAt ? LIGHTNING : BOMB;
     grid[last.x][last.y] = { type: specialType, sy: screenY(last.y) };
     appendLog(`${TYPE_CFG[specialType].icon} ${TYPE_CFG[specialType].name} 생성!`);
+    SFX.special();
   }
   chain = [];
 
@@ -1307,6 +1472,7 @@ function afterFall() {
     player.hp -= taken;
     enemy.countdown = enemy.interval;
     appendLog(`💥 적의 공격! ${taken} 피해` + (absorbed > 0 ? ` (${absorbed} 막음)` : ''));
+    SFX.hurt();
     let skullN = 2 + Math.floor((depth - 1) / 2) + (enemy.kind === 'boss' ? 1 : 0);
     if (hasRelic(R_CANDLE)) skullN = Math.max(0, skullN - 1); // 정화의 촛불
     const cursed = spawnSkulls(skullN);
@@ -1315,6 +1481,7 @@ function afterFall() {
       const ref = Math.round(enemy.atk * 0.4);
       enemy.hp = Math.max(0, enemy.hp - ref);
       appendLog(`🌵 가시 반사 ${ref}`);
+      SFX.thorn();
       floatText('-' + ref, '#7fc47f', 'right');
     }
     flashPanel('player-panel');
@@ -1474,7 +1641,8 @@ window.game = {
     victory, finishNode, nodeDone, gameOver, showMap, genActMap, startBattle,
     spawnEnemy, showEvent, showShop, showRest, showRewards, showRelicChoice,
     addRelic, gainGold, applyRandomReward, spawnSkulls, afterFall, resolveChain,
-    saveMeta, renderMeta, drawMapLines,
+    saveMeta, renderMeta, drawMapLines, SFX, setBgm,
+    getAudio: () => ({ actx, soundOn, bgmMode }),
     RELICS, REWARDS, EVENTS, META_UPS, NODE_CFG,
     setDepth: v => { depth = v; }, setAct: v => { act = v; },
     setPendingCurse: v => { pendingCurse = v; },
