@@ -6,8 +6,9 @@
 <title>블록 던전 (프로토타입)</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; }
+  html { height: 100%; background: #a9d977; }
   body {
+    min-height: 100%;
     background: #a9d977;
     color: #5a4630;
     font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
@@ -279,7 +280,7 @@
 
   <div id="perk-bar"></div>
   <div id="log"></div>
-  <footer>같은 색 블록을 드래그로 2개 이상 연결 — ⚔ 공격 · 🛡 방어 · ♥ 회복 · 💀 저주는 옆에서 매칭해 정화<br>4개+ 연결 시 💣, 6개+ 연결 시 ⚡ 생성 · 전투 후 지도에서 다음 노드 선택 — 정예·보스에게서 🏺 유물 획득</footer>
+  <footer>같은 색 블록을 드래그로 2개 이상 연결 — ⚔️ 공격 · 🛡️ 방어 · ♥️ 회복 · 💀 저주는 옆에서 매칭해 정화<br>4개+ 연결 시 💣, 6개+ 연결 시 ⚡ 생성 · 전투 후 지도에서 다음 노드 선택 — 정예·보스에게서 🏺 유물 획득</footer>
 </div>
 
 <script>
@@ -291,9 +292,9 @@ const MIN_CHAIN = 2;
 const FALL_SPEED = 1100; // px/s
 
 const TYPE_CFG = [
-  { color: '#e85d5d', hi: '#f59a9a', dark: '#c23e3e', icon: '⚔', name: '공격' },
-  { color: '#5aa8e8', hi: '#9dcdf5', dark: '#3d7fbc', icon: '🛡', name: '방어' },
-  { color: '#5fc16d', hi: '#a3e0ab', dark: '#3f9c4d', icon: '♥', name: '회복' },
+  { color: '#e85d5d', hi: '#f59a9a', dark: '#c23e3e', icon: '⚔️', name: '공격' },
+  { color: '#5aa8e8', hi: '#9dcdf5', dark: '#3d7fbc', icon: '🛡️', name: '방어' },
+  { color: '#5fc16d', hi: '#a3e0ab', dark: '#3f9c4d', icon: '♥️', name: '회복' },
   { color: '#7d7391', hi: '#a49ab8', dark: '#5c5470', icon: '💀', name: '저주' }, // 연결 불가, 인접 매칭으로만 정화
   { color: '#f2953f', hi: '#f7bb7d', dark: '#cc7222', icon: '💣', name: '폭탄' },  // 4+연결 보상, 3×3 폭발
   { color: '#f7c948', hi: '#fadf8e', dark: '#d9a520', icon: '⚡', name: '번개' },  // 6+연결 보상, 십자 제거
@@ -536,11 +537,11 @@ const RELICS = [
   { icon: '🧲', name: '자석 결정', desc: '특수 블록 생성 조건 완화 — 3개+ 연결 시 💣, 5개+ 연결 시 ⚡' },
   { icon: '🍀', name: '네잎클로버', desc: '전투 보상 선택지가 4장으로 증가' },
   { icon: '💎', name: '황금 두꺼비', desc: '골드 획득 +50%' },
-  { icon: '🕯', name: '정화의 촛불', desc: '적이 만드는 저주 블록 -1개' },
+  { icon: '🕯️', name: '정화의 촛불', desc: '적이 만드는 저주 블록 -1개' },
   { icon: '🌵', name: '가시 갑옷', desc: '적에게 공격당하면 적 공격력의 40%를 반사' },
   { icon: '🌿', name: '재생의 부적', desc: '내 행동마다 체력 +2' },
-  { icon: '🗡', name: '사신의 낫', desc: '적 체력이 30% 이하면 공격 피해 ×1.5' },
-  { icon: '🛡', name: '수호 문장', desc: '보호막 상한 30 → 50' },
+  { icon: '🗡️', name: '사신의 낫', desc: '적 체력이 30% 이하면 공격 피해 ×1.5' },
+  { icon: '🛡️', name: '수호 문장', desc: '보호막 상한 30 → 50' },
   { icon: '⏳', name: '시간의 모래', desc: '새 적의 첫 공격까지 1턴 추가' },
   { icon: '🎲', name: '행운 주사위', desc: '전투 시작 시 보드에 💣 1개 배치' },
 ];
@@ -576,9 +577,9 @@ function giveRandomRelic(prefix) {
 // ── 메타 성장 (영구, localStorage — 개발가이드 5절) ────
 const META_KEY = 'bd_meta_v1';
 const META_UPS = [
-  { key: 'atk',   icon: '⚔', name: '힘의 각인',   desc: '시작 공격력 +1',            max: 3, costs: [10, 25, 50] },
-  { key: 'hp',    icon: '❤', name: '생명의 각인', desc: '시작 최대 체력 +10',        max: 3, costs: [10, 25, 50] },
-  { key: 'shield',icon: '🛡', name: '방패의 각인', desc: '시작 보호막 +8',            max: 2, costs: [15, 35] },
+  { key: 'atk',   icon: '⚔️', name: '힘의 각인',   desc: '시작 공격력 +1',            max: 3, costs: [10, 25, 50] },
+  { key: 'hp',    icon: '❤️', name: '생명의 각인', desc: '시작 최대 체력 +10',        max: 3, costs: [10, 25, 50] },
+  { key: 'shield',icon: '🛡️', name: '방패의 각인', desc: '시작 보호막 +8',            max: 2, costs: [15, 35] },
   { key: 'gold',  icon: '💰', name: '재물의 각인', desc: '시작 골드 +25',             max: 3, costs: [8, 20, 40] },
   { key: 'relic', icon: '🏺', name: '유물의 각인', desc: '런 시작 시 무작위 유물 1개', max: 1, costs: [80] },
 ];
@@ -697,12 +698,13 @@ function newGame() {
 }
 
 // ── 노드맵 (개발가이드 5절: 전투/이벤트/상점/휴식/보스 무작위 배치) ──
+// 아이콘에 변형 선택자(U+FE0F) 필수 — 없으면 윈도우가 흑백 텍스트 글리프로 렌더링
 const NODE_CFG = {
-  battle: { icon: '⚔', name: '전투' },
+  battle: { icon: '⚔️', name: '전투' },
   elite:  { icon: '👹', name: '정예' },
   event:  { icon: '❓', name: '이벤트' },
   shop:   { icon: '🛒', name: '상점' },
-  rest:   { icon: '🏕', name: '휴식' },
+  rest:   { icon: '🏕️', name: '휴식' },
   boss:   { icon: '👑', name: '보스' },
 };
 
@@ -865,7 +867,7 @@ function finishNode() {
 function startBattle(kind) {
   ensureMoveExists();
   spawnEnemy(kind);
-  const names = { battle: '⚔ 전투 시작!', elite: '👹 정예 출현! (유물을 노려라)', boss: '👑 보스전!' };
+  const names = { battle: '⚔️ 전투 시작!', elite: '👹 정예 출현! (유물을 노려라)', boss: '👑 보스전!' };
   setLog(names[kind]);
   setBgm(kind === 'boss' ? 'boss' : 'battle');
   if (kind === 'boss') SFX.bossIn();
@@ -976,10 +978,10 @@ function hideChoiceOverlay() {
 
 // ── 보상 풀 (스테이지 클리어 시 3택 1, 네잎클로버 보유 시 4택 1) ──
 const REWARDS = [
-  { icon: '⚔', name: '강철 칼날', desc: '공격력 +3', apply: p => p.atk += 3 },
+  { icon: '⚔️', name: '강철 칼날', desc: '공격력 +3', apply: p => p.atk += 3 },
   { icon: '💪', name: '전투 광란', desc: '공격력 +6, 최대 체력 -10', apply: p => { p.atk += 6; p.maxHp = Math.max(30, p.maxHp - 10); p.hp = Math.min(p.hp, p.maxHp); } },
-  { icon: '❤', name: '생명의 샘', desc: '최대 체력 +20, 즉시 20 회복', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
-  { icon: '🛡', name: '강화 방패', desc: '방어 블록 효율 +2 (블록당 보호막)', apply: p => p.defGain += 2 },
+  { icon: '❤️', name: '생명의 샘', desc: '최대 체력 +20, 즉시 20 회복', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
+  { icon: '🛡️', name: '강화 방패', desc: '방어 블록 효율 +2 (블록당 보호막)', apply: p => p.defGain += 2 },
   { icon: '💊', name: '비상 물약', desc: '회복 블록 효율 +2 (블록당 회복량)', apply: p => p.healGain += 2 },
   { icon: '✨', name: '수호의 각인', desc: '전투 시작 시 보호막 +10', apply: p => p.startShield += 10 },
   { icon: '🔗', name: '연쇄의 달인', desc: '긴 연결 보너스 강화 (최대 2회 중첩)', apply: p => p.bonusTier = Math.min(2, p.bonusTier + 1) },
@@ -1164,7 +1166,7 @@ function showShop() {
       act() { const h = Math.round(player.maxHp * 0.35); player.hp = Math.min(player.maxHp, player.hp + h); setLog(`💊 체력 +${h}`); } },
     { icon: '🎴', name: '수련 두루마리', desc: '무작위 보상 1개', price: 60, act: applyRandomReward },
     { icon: '🏺', name: '고대 유물', desc: '무작위 유물 1개', price: 110, act() { giveRandomRelic('🛒 구매!'); } },
-    { icon: '❤', name: '생명의 정수', desc: '최대 체력 +10', price: 55,
+    { icon: '❤️', name: '생명의 정수', desc: '최대 체력 +10', price: 55,
       act() { player.maxHp += 10; player.hp += 10; setLog('❤ 최대 체력 +10'); } },
   ];
   renderShop(items);
@@ -1439,7 +1441,7 @@ function resolveChain() {
     let scythe = false;
     if (hasRelic(R_SCYTHE) && enemy.hp <= enemy.maxHp * 0.3) { dmg = Math.round(dmg * 1.5); scythe = true; } // 사신의 낫
     enemy.hp = Math.max(0, enemy.hp - dmg);
-    let msg = `⚔ 공격 ×${n}! 적에게 ${dmg} 피해` + (bonus > 1 ? ` (연결 보너스 ×${bonus})` : '') + (scythe ? ' · 🗡 사신의 낫 ×1.5' : '');
+    let msg = `⚔️ 공격 ×${n}! 적에게 ${dmg} 피해` + (bonus > 1 ? ` (연결 보너스 ×${bonus})` : '') + (scythe ? ' · 🗡️ 사신의 낫 ×1.5' : '');
     if (hasRelic(R_FIRE) && dragLen >= 5) { enemy.burn = 2; msg += ' · 🔥 화상!'; } // 불꽃의 심장
     if (player.lifesteal > 0) {
       const drain = Math.round(dmg * player.lifesteal);
@@ -1462,14 +1464,14 @@ function resolveChain() {
     const before = player.shield;
     player.shield = Math.min(shieldCap(), player.shield + gain);
     const actual = player.shield - before;
-    setLog(`🛡 방어 ×${n}! 보호막 +${actual}` + (actual < gain ? ` (상한 ${shieldCap()})` : ''));
+    setLog(`🛡️ 방어 ×${n}! 보호막 +${actual}` + (actual < gain ? ` (상한 ${shieldCap()})` : ''));
     SFX.defense();
     playAnim(pcEl, 'anim-buffB', 520);
-    floatText('+' + actual + '🛡', '#3d7fbc', 'left');
+    floatText('+' + actual + '🛡️', '#3d7fbc', 'left');
   } else {
     const heal = Math.round(player.healGain * n * bonus);
     player.hp = Math.min(player.maxHp, player.hp + heal);
-    setLog(`♥ 회복 ×${n}! 체력 +${heal}`);
+    setLog(`♥️ 회복 ×${n}! 체력 +${heal}`);
     SFX.heal();
     playAnim(pcEl, 'anim-buffG', 520);
     floatText('+' + heal, '#3da34e', 'left');
@@ -1555,7 +1557,7 @@ function afterFall() {
     setTimeout(() => {
       playAnim(pcEl, 'anim-hurt', 420);
       floatText('-' + taken, '#e04343', 'left');
-      if (absorbed > 0) floatText('🛡-' + absorbed, '#3d7fbc', 'left');
+      if (absorbed > 0) floatText('🛡️-' + absorbed, '#3d7fbc', 'left');
     }, 170);
   }
 
@@ -1582,8 +1584,8 @@ function flashPanel(id) {
 function updateHud() {
   document.getElementById('player-hp-bar').style.width = (Math.max(0, player.hp) / player.maxHp * 100) + '%';
   document.getElementById('player-stats').innerHTML =
-    `HP ${Math.max(0, player.hp)}/${player.maxHp} · 🛡 ${player.shield} · <span class="gold">💰${player.gold}</span><br>` +
-    `⚔${player.atk} 🛡${player.defGain} ♥${player.healGain} · 지역 ${act} · ${depth}층 · ${turn}턴`;
+    `HP ${Math.max(0, player.hp)}/${player.maxHp} · 🛡️ ${player.shield} · <span class="gold">💰${player.gold}</span><br>` +
+    `⚔️${player.atk} 🛡️${player.defGain} ♥️${player.healGain} · 지역 ${act} · ${depth}층 · ${turn}턴`;
 
   const nameEl = document.getElementById('enemy-name');
   const eBar = document.getElementById('enemy-hp-bar');
