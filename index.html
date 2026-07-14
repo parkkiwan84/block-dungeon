@@ -346,6 +346,38 @@
   }
   .t-btn:active { transform: scale(0.95); }
 
+  /* ── 모험 시작 인트로 모션 ── */
+  #title-screen.t-leave .t-logo { animation: tFadeUp 0.5s ease forwards; }
+  #title-screen.t-leave .t-sub,
+  #title-screen.t-leave .t-best,
+  #title-screen.t-leave #t-start,
+  #title-screen.t-leave .t-row { animation: tFadeDown 0.45s ease forwards; }
+  #title-screen.t-leave .t-a1 { animation: heroDash 0.9s ease-in forwards; }
+  #title-screen.t-leave .t-a2 { animation: fleeL 0.7s ease-in forwards; }
+  #title-screen.t-leave .t-a3 { animation: fleeL 0.7s ease-in 0.08s forwards; }
+  @keyframes tFadeUp { to { opacity: 0; transform: translateY(-32px); } }
+  @keyframes tFadeDown { to { opacity: 0; transform: translateY(26px); } }
+  @keyframes heroDash {
+    0% { transform: translateY(0); }
+    22% { transform: translateY(-22px) scaleY(1.06); }
+    38% { transform: translateY(0) scaleY(0.9); }
+    52% { transform: translateY(-16px) scaleY(1.04); }
+    100% { transform: translateX(68vw) translateY(-4px); }
+  }
+  @keyframes fleeL {
+    0% { transform: translateY(0) scaleX(1); }
+    28% { transform: translateY(-12px) scaleX(-1); }
+    100% { transform: translateX(-68vw) scaleX(-1); }
+  }
+  #wipe {
+    position: fixed; inset: 0; z-index: 60; pointer-events: none;
+    background: #2e2418;
+    clip-path: circle(0% at 50% 50%);
+    transition: clip-path 0.4s ease-in-out;
+  }
+  #wipe.full { clip-path: circle(120% at 50% 50%); }
+  #wipe.hidden { display: none; }
+
   /* ── 획득 임팩트 연출 ── */
   .reward-card.picked {
     border-color: #f7c948 !important; background: #fff3cf !important;
@@ -513,6 +545,7 @@
     <button class="t-btn" id="t-settings">⚙️ 설정</button>
   </div>
 </div>
+<div id="wipe" class="hidden"></div>
 
 <script>
 'use strict';
@@ -1725,10 +1758,28 @@ function showTitle() {
 function hideTitle() {
   document.getElementById('title-screen').classList.add('hidden');
 }
+// 모험 시작 연출: 슬라임 점프+돌진 → 적 도망 → 원형 와이프 닫힘 → 지도 공개
+let startingRun = false;
 document.getElementById('t-start').addEventListener('click', () => {
+  if (startingRun) return;
+  startingRun = true;
   SFX.fanfare();
-  hideTitle();
-  newGame();
+  const title = document.getElementById('title-screen');
+  const wipe = document.getElementById('wipe');
+  title.classList.add('t-leave');
+  setTimeout(() => noiseHit({ hipass: true, filter: 500, dur: 0.35, vol: 0.22 }), 550); // 휙!
+  setTimeout(() => {
+    wipe.classList.remove('hidden');
+    void wipe.offsetWidth; // 리플로우 후 전환 시작
+    wipe.classList.add('full');
+  }, 700);
+  setTimeout(() => {
+    hideTitle();
+    title.classList.remove('t-leave');
+    newGame();
+    wipe.classList.remove('full'); // 원이 열리며 지도 공개
+    setTimeout(() => { wipe.classList.add('hidden'); startingRun = false; }, 460);
+  }, 1150);
 });
 document.getElementById('t-meta').addEventListener('click', () => {
   SFX.ui();
